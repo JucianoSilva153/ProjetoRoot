@@ -8,11 +8,23 @@
 
     <ItemGroup>
         <PackageReference Include="FastEndpoints" Version="6.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Controllers\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Root.Application\Root.Application.csproj" />
+      <ProjectReference Include="..\Root.Common\Root.Common.csproj" />
+      <ProjectReference Include="..\Root.Domain\Root.Domain.csproj" />
+      <ProjectReference Include="..\Root.Infrastructure\Root.Infrastructure.csproj" />
+      <ProjectReference Include="..\Root.Persistence\Root.Persistence.csproj" />
     </ItemGroup>
 
 </Project>

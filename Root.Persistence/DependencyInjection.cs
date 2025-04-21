@@ -10,7 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<RootDbContext>(op =>
-            op.UseMySql(configuration.GetConnectionString("Default"), new MySqlServerVersion("")));
+            op.UseMySql(configuration.GetConnectionString("Default"), ServerVersion.Parse("10.4.32")));
 
         // Outros servicos...
 
