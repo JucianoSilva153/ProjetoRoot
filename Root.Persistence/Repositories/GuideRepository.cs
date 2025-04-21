@@ -1,10 +1,13 @@
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
+using Root.Persistence.Context;
 
 namespace Root.Persistence.Repositories;
 
-public class GuideRepository : IGuideRepository
+public class GuideRepository(RootDbContext dbContext) : IGuideRepository
 {
+    private readonly RootDbContext _dbContext = dbContext;
+
     public Task<bool> CreateAsync(Guide entity)
     {
         throw new NotImplementedException();

@@ -1,10 +1,13 @@
 using Root.Domain.Entities.Blog;
 using Root.Domain.Interfaces;
+using Root.Persistence.Context;
 
 namespace Root.Persistence.Repositories;
 
-public class PostRepository : IPostRepository
+public class PostRepository(RootDbContext dbContext) : IPostRepository
 {
+    private readonly RootDbContext _dbContext = dbContext;
+
     public Task<bool> CreateAsync(Post entity)
     {
         throw new NotImplementedException();

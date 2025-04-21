@@ -1,10 +1,13 @@
 using Root.Domain.Entities.Blog;
 using Root.Domain.Interfaces;
+using Root.Persistence.Context;
 
 namespace Root.Persistence.Repositories;
 
-public class CategoryRepository : ICategoryRepository
+public class CategoryRepository(RootDbContext dbContext) : ICategoryRepository
 {
+    private readonly RootDbContext _dbContext = dbContext;
+
     public Task<bool> CreateAsync(Category entity)
     {
         throw new NotImplementedException();

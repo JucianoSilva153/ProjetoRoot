@@ -1,10 +1,13 @@
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
+using Root.Persistence.Context;
 
 namespace Root.Persistence.Repositories;
 
-public class AdministratorRepository : IAdministratorRepository
+public class AdministratorRepository(RootDbContext dbContext) : IAdministratorRepository
 {
+    private readonly RootDbContext _dbContext = dbContext;
+
     public Task<bool> CreateAsync(Administrator entity)
     {
         throw new NotImplementedException();

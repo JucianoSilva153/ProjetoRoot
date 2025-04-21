@@ -1,10 +1,13 @@
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
+using Root.Persistence.Context;
 
 namespace Root.Persistence.Repositories;
 
-public class ClientRepository : IClientRepository
+public class ClientRepository(RootDbContext dbContext) : IClientRepository
 {
+    private readonly RootDbContext _dbContext = dbContext;
+
     public Task<bool> CreateAsync(Client entity)
     {
         throw new NotImplementedException();

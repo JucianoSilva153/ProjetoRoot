@@ -1,10 +1,13 @@
 using Root.Domain.Entities.Packages;
 using Root.Domain.Interfaces;
+using Root.Persistence.Context;
 
 namespace Root.Persistence.Repositories;
 
-public class ActivityRepository : IActivityRepository
+public class ActivityRepository(RootDbContext dbContext) : IActivityRepository
 {
+    private readonly RootDbContext _dbContext = dbContext;
+
     public Task<bool> CreateAsync(Activity entity)
     {
         throw new NotImplementedException();

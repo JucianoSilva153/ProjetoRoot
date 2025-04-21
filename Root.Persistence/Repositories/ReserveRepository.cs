@@ -1,10 +1,13 @@
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
+using Root.Persistence.Context;
 
 namespace Root.Persistence.Repositories;
 
-public class ReserveRepository : IReserveRepository
+public class ReserveRepository(RootDbContext dbContext) : IReserveRepository
 {
+    private readonly RootDbContext _dbContext = dbContext;
+
     public Task<bool> CreateAsync(Reserve entity)
     {
         throw new NotImplementedException();
