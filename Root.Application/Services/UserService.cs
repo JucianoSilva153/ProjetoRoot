@@ -95,4 +95,18 @@ public class UserService(IUserRepository userRepository)
 
         return false;
     }
+
+    public async Task<bool> DeleteUserAsync(Guid userId)
+    {
+        try
+        {
+            return await userRepository.DeleteAsync(userId);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Erro ao tentar eliminar Usuario!!!");
+        }
+
+        return false;
+    }
 }
