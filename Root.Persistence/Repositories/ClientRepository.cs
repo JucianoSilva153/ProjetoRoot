@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
@@ -8,28 +9,58 @@ public class ClientRepository(RootDbContext dbContext) : IClientRepository
 {
     private readonly RootDbContext _dbContext = dbContext;
 
-    public Task<bool> CreateAsync(Client entity)
+    public async Task<bool> CreateAsync(Client entity)
     {
-        throw new NotImplementedException();
+        await _dbContext.Clients.AddAsync(entity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<Client?> GetByIdAsync(Guid id)
+    public async Task<Client?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Clients.FirstOrDefaultAsync(client => client.Id == id);
     }
 
-    public Task<IEnumerable<Client>> GetAllAsync()
+    public async Task<IEnumerable<Client>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.Clients.ToListAsync();
     }
 
-    public Task<bool> UpdateAsync(Client entity)
+    public async Task<bool> UpdateAsync(Client entity)
     {
-        throw new NotImplementedException();
+        var client = await GetByIdAsync(entity.Id);
+
+        if (client is null)
+            return false;
+
+        client.Name = entity.Name;
+        client.Surname = entity.Surname;
+        client.Nationality = entity.Nationality;
+        client.BirthDate = entity.BirthDate;
+        client.ModifiedAt = DateTime.Now;
+        // client.ModifiedBy = 
+
+        _dbContext.Update(client);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var client = await GetByIdAsync(id);
+
+        if (client is null)
+            return false;
+
+        _dbContext.Clients.Remove(client);
+        int entriesCount = await _dbContext.SaveChangesAsync();
+
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
@@ -8,28 +9,58 @@ public class AdministratorRepository(RootDbContext dbContext) : IAdministratorRe
 {
     private readonly RootDbContext _dbContext = dbContext;
 
-    public Task<bool> CreateAsync(Administrator entity)
+    public async Task<bool> CreateAsync(Administrator entity)
     {
-        throw new NotImplementedException();
+        await _dbContext.AddAsync(entity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<Administrator?> GetByIdAsync(Guid id)
+    public async Task<Administrator?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Administrators.FirstOrDefaultAsync(admin => admin.Id == id);
     }
 
-    public Task<IEnumerable<Administrator>> GetAllAsync()
+    public async Task<IEnumerable<Administrator>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.Administrators.ToListAsync();
     }
 
-    public Task<bool> UpdateAsync(Administrator entity)
+    public async Task<bool> UpdateAsync(Administrator entity)
     {
-        throw new NotImplementedException();
+        var admin = await GetByIdAsync(entity.Id);
+
+        if (admin is null)
+            return false;
+
+        admin.Name = entity.Name;
+        admin.Surname = entity.Surname;
+        admin.AcessLeves = entity.AcessLeves;
+        admin.Role = entity.Role;
+        admin.ModifiedAt = DateTime.Now; 
+        // admin.ModifiedBy =  
+
+        _dbContext.Update(admin);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var admin = await GetByIdAsync(id);
+
+        if (admin is null)
+            return false;
+
+        _dbContext.Administrators.Remove(admin);
+        int entriesCount = await _dbContext.SaveChangesAsync();
+
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 }

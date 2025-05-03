@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities.Blog;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
@@ -8,28 +9,57 @@ public class PostRepository(RootDbContext dbContext) : IPostRepository
 {
     private readonly RootDbContext _dbContext = dbContext;
 
-    public Task<bool> CreateAsync(Post entity)
+    public async Task<bool> CreateAsync(Post entity)
     {
-        throw new NotImplementedException();
+        await _dbContext.Posts.AddAsync(entity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<Post?> GetByIdAsync(Guid id)
+    public async Task<Post?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Posts.FirstOrDefaultAsync(post => post.Id == id);
     }
 
-    public Task<IEnumerable<Post>> GetAllAsync()
+    public async Task<IEnumerable<Post>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.Posts.ToListAsync();
     }
 
-    public Task<bool> UpdateAsync(Post entity)
+    public async Task<bool> UpdateAsync(Post entity)
     {
-        throw new NotImplementedException();
+        var post = await GetByIdAsync(entity.Id);
+
+        if (post is null)
+            return false;
+
+        post.Content = entity.Content;
+        post.Image = entity.Image;
+        post.Title = entity.Title;
+        post.ModifiedAt = DateTime.Now;
+        // post.ModifiedABy = 
+
+        _dbContext.Update(post);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var post = await GetByIdAsync(id);
+
+        if (post is null)
+            return false;
+
+        _dbContext.Posts.Remove(post);
+        int entriesCount = await _dbContext.SaveChangesAsync();
+
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 }

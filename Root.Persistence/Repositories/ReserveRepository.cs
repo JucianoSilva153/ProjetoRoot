@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
@@ -8,28 +9,58 @@ public class ReserveRepository(RootDbContext dbContext) : IReserveRepository
 {
     private readonly RootDbContext _dbContext = dbContext;
 
-    public Task<bool> CreateAsync(Reserve entity)
+    public async Task<bool> CreateAsync(Reserve entity)
     {
-        throw new NotImplementedException();
+        await _dbContext.Reserves.AddAsync(entity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<Reserve?> GetByIdAsync(Guid id)
+    public async Task<Reserve?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Reserves.FirstOrDefaultAsync(reserve => reserve.Id == id);
     }
 
-    public Task<IEnumerable<Reserve>> GetAllAsync()
+    public async Task<IEnumerable<Reserve>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.Reserves.ToListAsync();
     }
 
-    public Task<bool> UpdateAsync(Reserve entity)
+    public async Task<bool> UpdateAsync(Reserve entity)
     {
-        throw new NotImplementedException();
+        var reserve = await GetByIdAsync(entity.Id);
+
+        if (reserve is null)
+            return false;
+
+        reserve.ClientId = entity.ClientId;
+        reserve.PackageId = entity.PackageId;
+        reserve.PeopleCount = entity.PeopleCount;
+        reserve.TotalPrice = entity.TotalPrice;
+        reserve.ModifiedAt = DateTime.Now;
+        // reserve.ModifiedBy = 
+
+        _dbContext.Update(reserve);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var reserve = await GetByIdAsync(id);
+
+        if (reserve is null)
+            return false;
+
+        _dbContext.Reserves.Remove(reserve);
+        int entriesCount = await _dbContext.SaveChangesAsync();
+
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities.Blog;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
@@ -8,28 +9,55 @@ public class CategoryRepository(RootDbContext dbContext) : ICategoryRepository
 {
     private readonly RootDbContext _dbContext = dbContext;
 
-    public Task<bool> CreateAsync(Category entity)
+    public async Task<bool> CreateAsync(Category entity)
     {
-        throw new NotImplementedException();
+        await _dbContext.PostCategories.AddAsync(entity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<Category?> GetByIdAsync(Guid id)
+    public async Task<Category?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _dbContext.PostCategories.FirstOrDefaultAsync(cat => cat.Id == id);
     }
 
-    public Task<IEnumerable<Category>> GetAllAsync()
+    public async Task<IEnumerable<Category>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.PostCategories.ToListAsync();
     }
 
-    public Task<bool> UpdateAsync(Category entity)
+    public async Task<bool> UpdateAsync(Category entity)
     {
-        throw new NotImplementedException();
+        var cat = await GetByIdAsync(entity.Id);
+
+        if (cat is null)
+            return false;
+
+        cat.Title = entity.Title;
+        cat.ModifiedAt = DateTime.Now;
+        // cat.ModifiedBy = 
+
+        _dbContext.Update(cat);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var category = await GetByIdAsync(id);
+
+        if (category is null)
+            return false;
+
+        _dbContext.PostCategories.Remove(category);
+        int entriesCount = await _dbContext.SaveChangesAsync();
+
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
@@ -8,28 +9,58 @@ public class GuideRepository(RootDbContext dbContext) : IGuideRepository
 {
     private readonly RootDbContext _dbContext = dbContext;
 
-    public Task<bool> CreateAsync(Guide entity)
+    public async Task<bool> CreateAsync(Guide entity)
     {
-        throw new NotImplementedException();
+        await _dbContext.Guides.AddAsync(entity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<Guide?> GetByIdAsync(Guid id)
+    public async Task<Guide?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Guides.FirstOrDefaultAsync(guide => guide.Id == id);
     }
 
-    public Task<IEnumerable<Guide>> GetAllAsync()
+    public async Task<IEnumerable<Guide>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.Guides.ToListAsync();
     }
 
-    public Task<bool> UpdateAsync(Guide entity)
+    public async Task<bool> UpdateAsync(Guide entity)
     {
-        throw new NotImplementedException();
+        var guide = await GetByIdAsync(entity.Id);
+
+        if (guide is null)
+            return false;
+
+        guide.Name = entity.Name;
+        guide.Description = entity.Description;
+        guide.Location = entity.Location;
+        guide.Idioms = entity.Idioms;
+        guide.ModifiedAt = DateTime.Now;
+        // guide.ModifiedBy = 
+
+        _dbContext.Update(guide);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var guide = await GetByIdAsync(id);
+
+        if (guide is null)
+            return false;
+
+        _dbContext.Guides.Remove(guide);
+        int entriesCount = await _dbContext.SaveChangesAsync();
+
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 }

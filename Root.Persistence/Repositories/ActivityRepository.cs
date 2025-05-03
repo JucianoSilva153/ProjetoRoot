@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities.Packages;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
@@ -8,28 +9,59 @@ public class ActivityRepository(RootDbContext dbContext) : IActivityRepository
 {
     private readonly RootDbContext _dbContext = dbContext;
 
-    public Task<bool> CreateAsync(Activity entity)
+    public async Task<bool> CreateAsync(Activity entity)
     {
-        throw new NotImplementedException();
+        await _dbContext.Activities.AddAsync(entity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<Activity?> GetByIdAsync(Guid id)
+    public async Task<Activity?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Activities.FirstOrDefaultAsync(activity => activity.Id == id);
     }
 
-    public Task<IEnumerable<Activity>> GetAllAsync()
+    public async Task<IEnumerable<Activity>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.Activities.ToListAsync();
     }
 
-    public Task<bool> UpdateAsync(Activity entity)
+    public async Task<bool> UpdateAsync(Activity entity)
     {
-        throw new NotImplementedException();
+        var activity = await GetByIdAsync(entity.Id);
+
+        if (activity is null)
+            return false;
+
+        activity.Name = entity.Name;
+        activity.Type = entity.Type;
+        activity.Description = entity.Description;
+        activity.Price = entity.Price;
+        activity.DurationTime = entity.DurationTime;
+        activity.ModifiedAt = DateTime.Now;
+        // activity.ModifiedBy = 
+
+        _dbContext.Update(activity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var activity = await GetByIdAsync(id);
+
+        if (activity is null)
+            return false;
+
+        _dbContext.Activities.Remove(activity);
+        int entriesCount = await _dbContext.SaveChangesAsync();
+
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities.Packages;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
@@ -8,28 +9,57 @@ public class PackageRepository(RootDbContext dbContext) : IPackageRepository
 {
     private readonly RootDbContext _dbContext = dbContext;
 
-    public Task<bool> CreateAsync(Package entity)
+    public async Task<bool> CreateAsync(Package entity)
     {
-        throw new NotImplementedException();
+        await _dbContext.Packages.AddAsync(entity);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<Package?> GetByIdAsync(Guid id)
+    public async Task<Package?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Packages.FirstOrDefaultAsync(pack => pack.Id == id);
     }
 
-    public Task<IEnumerable<Package>> GetAllAsync()
+    public async Task<IEnumerable<Package>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.Packages.ToListAsync();
     }
 
-    public Task<bool> UpdateAsync(Package entity)
+    public async Task<bool> UpdateAsync(Package entity)
     {
-        throw new NotImplementedException();
+        var pack = await GetByIdAsync(entity.Id);
+
+        if (pack is null)
+            return false;
+
+        pack.Name = entity.Name;
+        pack.Type = entity.Type;
+        pack.Description = entity.Description;
+        pack.ModifiedAt = DateTime.Now;
+        // pack.ModifiedBy = 
+
+        _dbContext.Update(pack);
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var pack = await GetByIdAsync(id);
+
+        if (pack is null)
+            return false;
+
+        _dbContext.Packages.Remove(pack);
+        int entriesCount = await _dbContext.SaveChangesAsync();
+
+        if (entriesCount > 0)
+            return true;
+        return false;
     }
 }
