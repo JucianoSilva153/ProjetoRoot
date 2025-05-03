@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Root.Application.Services;
 
 namespace Root.Application;
 
@@ -9,6 +10,7 @@ public static class DependencyInjection
     {
         // Outros servicos...
 
+        services.AddTransient<UserService>();
         return services;
     }
 }

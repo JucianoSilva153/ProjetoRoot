@@ -17,7 +17,7 @@ public static class DependencyInjection
         // other services...
         services.AddTransient<IActivityRepository, ActivityRepository>();
         services.AddTransient<IAdministratorRepository, AdministratorRepository>();
-        services.AddTransient<ICategoryRepository, ICategoryRepository>();
+        services.AddTransient<ICategoryRepository, CategoryRepository>();
         services.AddTransient<IClientRepository, ClientRepository>();
         services.AddTransient<IGuideRepository, GuideRepository>();
         services.AddTransient<IPackageRepository, PackageRepository>();
