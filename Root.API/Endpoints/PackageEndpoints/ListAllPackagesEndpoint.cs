@@ -9,7 +9,7 @@ public class ListAllPackagesEndpoint(PackageService packageService) : EndpointWi
     public override void Configure()
     {
         Get("/packages");
-        Tags("Packages");
+        Description(x => x.WithTags("Packages"));
         AllowAnonymous();
     }
 

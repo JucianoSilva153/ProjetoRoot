@@ -9,7 +9,7 @@ public class ListAllCategoriesEndpoint(CategoryService categoryService) : Endpoi
     public override void Configure()
     {
         Get("/categories");
-        Tags("Categories");
+        Description(x => x.WithTags("Categories"));
         AllowAnonymous();
     }
 

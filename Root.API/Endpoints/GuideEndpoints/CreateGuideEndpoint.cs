@@ -9,7 +9,7 @@ public class CreateGuideEndpoint(GuideService guideService) : Endpoint<CreateGui
     public override void Configure()
     {
         Post("/guides");
-        Tags("Guides");
+        Description(x => x.WithTags("Guides"));
         AllowAnonymous();
     }
 

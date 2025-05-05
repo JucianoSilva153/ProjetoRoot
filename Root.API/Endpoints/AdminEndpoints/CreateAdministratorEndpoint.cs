@@ -9,7 +9,7 @@ public class CreateAdministratorEndpoint(AdministratorService administratorServi
     public override void Configure()
     {
         Post("/administrators");
-        Tags("Administrators");
+        Description(x => x.WithTags("Administrators"));
         AllowAnonymous();
     }
 

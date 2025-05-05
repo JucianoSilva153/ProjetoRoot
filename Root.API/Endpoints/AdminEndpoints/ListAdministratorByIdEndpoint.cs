@@ -9,7 +9,7 @@ public class ListAdministratorByIdEndpoint(AdministratorService administratorSer
     public override void Configure()
     {
         Get("/administrators/{adminId:guid}");
-        Tags("Administrators");
+        Description(x => x.WithTags("Administrators"));
         AllowAnonymous();
     }
 

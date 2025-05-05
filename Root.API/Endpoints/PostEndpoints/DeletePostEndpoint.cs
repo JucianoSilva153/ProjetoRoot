@@ -8,7 +8,7 @@ public class DeletePostEndpoint(PostService postService) : Endpoint<Guid>
     public override void Configure()
     {
         Delete("/posts/{postId:guid}");
-        Tags("Posts");
+        Description(x => x.WithTags("Posts"));
         AllowAnonymous();
     }
 

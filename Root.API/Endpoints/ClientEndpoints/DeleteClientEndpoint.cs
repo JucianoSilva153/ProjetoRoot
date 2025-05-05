@@ -8,7 +8,7 @@ public class DeleteClientEndpoint(ClientService clientService) : Endpoint<Guid>
     public override void Configure()
     {
         Delete("/clients/{clientId:guid}");
-        Tags("Clients");
+        Description(x => x.WithTags("Clients"));
         AllowAnonymous();
     }
 

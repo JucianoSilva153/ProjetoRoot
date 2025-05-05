@@ -8,7 +8,7 @@ public class DeletePackageEndpoint(PackageService packageService) : Endpoint<Gui
     public override void Configure()
     {
         Delete("/packages/{packageId:guid}");
-        Tags("Packages");
+        Description(x => x.WithTags("Packages"));
         AllowAnonymous();
     }
 

@@ -8,7 +8,7 @@ public class DeleteUserEndpoint(UserService userService) : Endpoint<Guid>
     public override void Configure()
     {
         Delete("/users/{userId:guid}");
-        Tags("Users");
+        Description(x => x.WithTags("Users"));
         AllowAnonymous();
     }
 

@@ -7,7 +7,7 @@ public class CreateUserEndpoint(UserService userService) : Endpoint<CreateUserDt
     public override void Configure()
     {
         Post("/users");
-        Tags("Users");
+        Description(x => x.WithTags("Users"));
         AllowAnonymous();
     }
 

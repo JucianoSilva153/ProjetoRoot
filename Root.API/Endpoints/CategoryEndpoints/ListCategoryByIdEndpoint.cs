@@ -9,7 +9,7 @@ public class ListCategoryByIdEndpoint(CategoryService categoryService) : Endpoin
     public override void Configure()
     {
         Get("/categories/{categoryId:guid}");
-        Tags("Categories");
+        Description(x => x.WithTags("Categories"));
         AllowAnonymous();
     }
 

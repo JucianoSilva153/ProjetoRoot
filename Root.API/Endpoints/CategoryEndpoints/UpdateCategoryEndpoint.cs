@@ -9,7 +9,7 @@ public class UpdateCategoryEndpoint(CategoryService categoryService) : Endpoint<
     public override void Configure()
     {
         Put("/categories");
-        Tags("Categories");
+        Description(x => x.WithTags("Categories"));
         AllowAnonymous();
     }
 

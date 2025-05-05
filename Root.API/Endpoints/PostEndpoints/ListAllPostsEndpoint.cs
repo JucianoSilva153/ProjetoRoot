@@ -9,7 +9,7 @@ public class ListAllPostsEndpoint(PostService postService) : EndpointWithoutRequ
     public override void Configure()
     {
         Get("/posts");
-        Tags("Posts");
+        Description(x => x.WithTags("Posts"));
         AllowAnonymous();
     }
 

@@ -9,7 +9,7 @@ public class UpdatePackageEndpoint(PackageService packageService) : Endpoint<Upd
     public override void Configure()
     {
         Put("/packages");
-        Tags("Packages");
+        Description(x => x.WithTags("Packages"));
         AllowAnonymous();
     }
 

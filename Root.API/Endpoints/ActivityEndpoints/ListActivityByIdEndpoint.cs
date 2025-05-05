@@ -9,7 +9,7 @@ public class ListActivityByIdEndpoint(ActivityService activityService) : Endpoin
     public override void Configure()
     {
         Get("/activities/{activityId:guid}");
-        Tags("Activities");
+        Description(x => x.WithTags("Activities"));
         AllowAnonymous();
     }
 

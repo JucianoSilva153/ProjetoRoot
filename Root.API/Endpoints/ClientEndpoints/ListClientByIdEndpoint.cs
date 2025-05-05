@@ -9,7 +9,7 @@ public class ListClientByIdEndpoint(ClientService clientService) : Endpoint<Guid
     public override void Configure()
     {
         Get("/clients/{clientId:guid}");
-        Tags("Clients");
+        Description(x => x.WithTags("Clients"));
         AllowAnonymous();
     }
 

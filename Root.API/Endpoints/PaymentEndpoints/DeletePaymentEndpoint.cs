@@ -8,7 +8,7 @@ public class DeletePaymentEndpoint(PaymentService paymentService) : Endpoint<Gui
     public override void Configure()
     {
         Delete("/payments/{paymentId:guid}");
-        Tags("Payments");
+        Description(x => x.WithTags("Payments"));
         AllowAnonymous();
     }
 

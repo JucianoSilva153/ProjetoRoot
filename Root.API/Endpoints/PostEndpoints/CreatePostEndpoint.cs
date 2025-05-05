@@ -9,7 +9,7 @@ public class CreatePostEndpoint(PostService postService) : Endpoint<CreatePostDt
     public override void Configure()
     {
         Post("/posts");
-        Tags("Posts");
+        Description(x => x.WithTags("Posts"));
         AllowAnonymous();
     }
 

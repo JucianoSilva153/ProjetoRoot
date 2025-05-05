@@ -9,7 +9,7 @@ public class UpdateActivityEndpoint(ActivityService activityService) : Endpoint<
     public override void Configure()
     {
         Put("/activities");
-        Tags("Activities");
+        Description(x => x.WithTags("Activities"));
         AllowAnonymous();
     }
 

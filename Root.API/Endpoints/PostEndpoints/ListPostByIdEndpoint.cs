@@ -9,7 +9,7 @@ public class ListPostByIdEndpoint(PostService postService) : Endpoint<Guid, List
     public override void Configure()
     {
         Get("/posts/{postId:guid}");
-        Tags("Posts");
+        Description(x => x.WithTags("Posts"));
         AllowAnonymous();
     }
 

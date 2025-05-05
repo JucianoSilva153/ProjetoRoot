@@ -9,7 +9,7 @@ public class UpdateAdministratorEndpoint(AdministratorService administratorServi
     public override void Configure()
     {
         Put("/administrators");
-        Tags("Administrators");
+        Description(x => x.WithTags("Administrators"));
         AllowAnonymous();
     }
 

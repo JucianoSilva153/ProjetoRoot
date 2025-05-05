@@ -8,7 +8,7 @@ public class DeleteActivityEndpoint(ActivityService activityService) : Endpoint<
     public override void Configure()
     {
         Delete("/activities/{activityId:guid}");
-        Tags("Activities");
+        Description(x => x.WithTags("Activities"));
         AllowAnonymous();
     }
 

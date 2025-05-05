@@ -9,7 +9,7 @@ public class UpdateUserEndpoint(UserService userService) : Endpoint<UpdateUserDt
     public override void Configure()
     {
         Put("/users");
-        Tags("Users");
+        Description(x => x.WithTags("Users"));
         AllowAnonymous();
     }
 

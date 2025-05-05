@@ -9,7 +9,7 @@ public class ListAllClientsEndpoint(ClientService clientService) : EndpointWitho
     public override void Configure()
     {
         Get("/clients");
-        Tags("Clients");
+        Description(x => x.WithTags("Clients"));
         AllowAnonymous();
     }
 

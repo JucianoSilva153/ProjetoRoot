@@ -9,7 +9,7 @@ public class CreatePackageEndpoint(PackageService packageService) : Endpoint<Cre
     public override void Configure()
     {
         Post("/packages");
-        Tags("Packages");
+        Description(x => x.WithTags("Packages"));
         AllowAnonymous();
     }
 

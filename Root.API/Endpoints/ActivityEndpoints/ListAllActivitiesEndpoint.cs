@@ -9,7 +9,7 @@ public class ListAllActivitiesEndpoint(ActivityService activityService) : Endpoi
     public override void Configure()
     {
         Get("/activities");
-        Tags("Activities");
+        Description(x => x.WithTags("Activities"));
         AllowAnonymous();
     }
 

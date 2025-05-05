@@ -9,7 +9,7 @@ public class CreatePaymentEndpoint(PaymentService paymentService) : Endpoint<Cre
     public override void Configure()
     {
         Post("/payments");
-        Tags("Payments");
+        Description(x => x.WithTags("Payments"));
         AllowAnonymous();
     }
 

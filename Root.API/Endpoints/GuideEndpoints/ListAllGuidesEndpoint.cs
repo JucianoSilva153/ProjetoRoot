@@ -9,7 +9,7 @@ public class ListAllGuidesEndpoint(GuideService guideService) : EndpointWithoutR
     public override void Configure()
     {
         Get("/guides");
-        Tags("Guides");
+        Description(x => x.WithTags("Guides"));
         AllowAnonymous();
     }
 

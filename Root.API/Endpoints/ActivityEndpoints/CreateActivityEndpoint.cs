@@ -9,7 +9,7 @@ public class CreateActivityEndpoint(ActivityService activityService) : Endpoint<
     public override void Configure()
     {
         Post("/activities");
-        Tags("Activities");
+        Description(x => x.WithTags("Activities"));
         AllowAnonymous();
     }
 

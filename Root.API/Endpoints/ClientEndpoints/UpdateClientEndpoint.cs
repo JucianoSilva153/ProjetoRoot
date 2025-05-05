@@ -9,7 +9,7 @@ public class UpdateClientEndpoint(ClientService clientService) : Endpoint<Update
     public override void Configure()
     {
         Put("/clients");
-        Tags("Clients");
+        Description(x => x.WithTags("Clients"));
         AllowAnonymous();
     }
 

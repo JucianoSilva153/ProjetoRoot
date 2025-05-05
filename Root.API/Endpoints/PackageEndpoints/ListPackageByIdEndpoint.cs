@@ -9,7 +9,7 @@ public class ListPackageByIdEndpoint(PackageService packageService) : Endpoint<G
     public override void Configure()
     {
         Get("/packages/{packageId:guid}");
-        Tags("Packages");
+        Description(x => x.WithTags("Packages"));
         AllowAnonymous();
     }
 

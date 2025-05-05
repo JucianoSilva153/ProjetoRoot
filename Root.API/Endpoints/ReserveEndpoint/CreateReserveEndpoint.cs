@@ -9,7 +9,7 @@ public class CreateReserveEndpoint(ReserveService reserveService) : Endpoint<Cre
     public override void Configure()
     {
         Post("/reserves");
-        Tags("Reserves");
+        Description(x => x.WithTags("Reserves"));
         AllowAnonymous();
     }
 

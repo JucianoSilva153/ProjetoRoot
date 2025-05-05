@@ -9,7 +9,7 @@ public class UpdatePaymentEndpoint(PaymentService paymentService) : Endpoint<Upd
     public override void Configure()
     {
         Put("/payments");
-        Tags("Payments");
+        Description(x => x.WithTags("Payments"));
         AllowAnonymous();
     }
 

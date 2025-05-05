@@ -9,7 +9,7 @@ public class ListAllAdministratorsEndpoint(AdministratorService administratorSer
     public override void Configure()
     {
         Get("/administrators");
-        Tags("Administrators");
+        Description(x => x.WithTags("Administrators"));
         AllowAnonymous();
     }
 

@@ -8,7 +8,7 @@ public class DeleteAdministratorEndpoint(AdministratorService administratorServi
     public override void Configure()
     {
         Delete("/administrators/{adminId:guid}");
-        Tags("Administrators");
+        Description(x => x.WithTags("Administrators"));
         AllowAnonymous();
     }
 

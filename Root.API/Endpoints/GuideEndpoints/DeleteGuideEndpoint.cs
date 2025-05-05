@@ -8,7 +8,7 @@ public class DeleteGuideEndpoint(GuideService guideService) : Endpoint<Guid>
     public override void Configure()
     {
         Delete("/guides/{guideId:guid}");
-        Tags("Guides");
+        Description(x => x.WithTags("Guides"));
         AllowAnonymous();
     }
 

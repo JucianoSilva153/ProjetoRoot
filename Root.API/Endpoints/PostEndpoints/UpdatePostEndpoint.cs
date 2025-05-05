@@ -9,7 +9,7 @@ public class UpdatePostEndpoint(PostService postService) : Endpoint<UpdatePostDt
     public override void Configure()
     {
         Put("/posts");
-        Tags("Posts");
+        Description(x => x.WithTags("Posts"));
         AllowAnonymous();
     }
 

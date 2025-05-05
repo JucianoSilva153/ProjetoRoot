@@ -9,7 +9,7 @@ public class UpdateGuideEndpoint(GuideService guideService) : Endpoint<UpdateGui
     public override void Configure()
     {
         Put("/guides");
-        Tags("Guides");
+        Description(x => x.WithTags("Guides"));
         AllowAnonymous();
     }
 

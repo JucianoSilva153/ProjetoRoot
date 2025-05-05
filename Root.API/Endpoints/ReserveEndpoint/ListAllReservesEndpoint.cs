@@ -9,7 +9,7 @@ public class ListAllReservesEndpoint(ReserveService reserveService) : EndpointWi
     public override void Configure()
     {
         Get("/reserves");
-        Tags("Reserves");
+        Description(x => x.WithTags("Reserves"));
         AllowAnonymous();
     }
 

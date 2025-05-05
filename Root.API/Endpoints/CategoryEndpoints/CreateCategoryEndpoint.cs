@@ -9,7 +9,7 @@ public class CreateCategoryEndpoint(CategoryService categoryService) : Endpoint<
     public override void Configure()
     {
         Post("/categories");
-        Tags("Categories");
+        Description(x => x.WithTags("Categories"));
         AllowAnonymous();
     }
 

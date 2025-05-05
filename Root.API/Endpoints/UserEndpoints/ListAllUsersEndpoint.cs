@@ -9,7 +9,7 @@ public class ListAllUsersEndpoint(UserService userService) : EndpointWithoutRequ
     public override void Configure()
     {
         Get("/users");
-        Tags("Users");
+        Description(x => x.WithTags("Users"));
         AllowAnonymous();
     }
 

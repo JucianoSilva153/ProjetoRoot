@@ -9,7 +9,7 @@ public class ListAllPaymentsEndpoint(PaymentService paymentService) : EndpointWi
     public override void Configure()
     {
         Get("/payments");
-        Tags("Payments");
+        Description(x => x.WithTags("Payments"));
         AllowAnonymous();
     }
 

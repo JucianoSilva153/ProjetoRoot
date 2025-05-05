@@ -8,7 +8,7 @@ public class DeleteCategoryEndpoint(CategoryService categoryService) : Endpoint<
     public override void Configure()
     {
         Delete("/categories/{categoryId:guid}");
-        Tags("Categories");
+        Description(x => x.WithTags("Categories"));
         AllowAnonymous();
     }
 

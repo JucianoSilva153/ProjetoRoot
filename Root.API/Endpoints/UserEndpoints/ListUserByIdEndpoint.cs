@@ -9,7 +9,7 @@ public class ListUserByIdEndpoint(UserService userService) : Endpoint<Guid, List
     public override void Configure()
     {
         Get("/users/{userId:guid}");
-        Tags("Users");
+        Description(x => x.WithTags("Users"));
         AllowAnonymous();
     }
 

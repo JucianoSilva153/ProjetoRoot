@@ -9,7 +9,7 @@ public class ListPaymentByIdEndpoint(PaymentService paymentService) : Endpoint<G
     public override void Configure()
     {
         Get("/payments/{paymentId:guid}");
-        Tags("Payments");
+        Description(x => x.WithTags("Payments"));
         AllowAnonymous();
     }
 

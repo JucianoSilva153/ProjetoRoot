@@ -9,7 +9,7 @@ public class CreateClientEndpoint(ClientService clientService) : Endpoint<Create
     public override void Configure()
     {
         Post("/clients");
-        Tags("Clients");
+        Description(x => x.WithTags("Clients"));
         AllowAnonymous();
     }
 

@@ -9,7 +9,7 @@ public class ListReserveByIdEndpoint(ReserveService reserveService) : Endpoint<G
     public override void Configure()
     {
         Get("/reserves/{reserveId:guid}");
-        Tags("Reserves");
+        Description(x => x.WithTags("Reserves"));
         AllowAnonymous();
     }
 

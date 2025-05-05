@@ -9,7 +9,7 @@ public class UpdateReserveEndpoint(ReserveService reserveService) : Endpoint<Upd
     public override void Configure()
     {
         Put("/reserves");
-        Tags("Reserves");
+        Description(x => x.WithTags("Reserves"));
         AllowAnonymous();
     }
 

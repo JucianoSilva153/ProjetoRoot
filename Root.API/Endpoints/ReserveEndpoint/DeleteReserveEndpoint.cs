@@ -8,7 +8,7 @@ public class DeleteReserveEndpoint(ReserveService reserveService) : Endpoint<Gui
     public override void Configure()
     {
         Delete("/reserves/{reserveId:guid}");
-        Tags("Reserves");
+        Description(x => x.WithTags("Reserves"));
         AllowAnonymous();
     }
 
