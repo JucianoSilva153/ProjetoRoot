@@ -8,5 +8,5 @@ public class UpdateAdminDto
     public string? Name { get; set; }
     public string? Surname { get; set; }
     public AdministratorRole? Role { get; set; }
-    public List<Guid>? AcessLevesIds { get; set; }
+    public List<AdministratorAcess>? AcessLeves { get; set; }
 }

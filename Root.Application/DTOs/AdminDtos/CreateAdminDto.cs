@@ -7,6 +7,6 @@ public class CreateAdministratorDto
     public string Name { get; set; }
     public string Surname { get; set; }
     public AdministratorRole? Role { get; set; }
-    public List<Guid> AcessLevesIds { get; set; } // Apenas os IDs dos acessos
+    public List<AdministratorAcess> AcessLevesIds { get; set; } // Apenas os IDs dos acessos
     public Guid UserId { get; set; }
 }
