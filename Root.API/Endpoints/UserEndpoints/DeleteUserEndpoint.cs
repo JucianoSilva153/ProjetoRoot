@@ -8,6 +8,7 @@ public class DeleteUserEndpoint(UserService userService) : Endpoint<Guid>
     public override void Configure()
     {
         Delete("/users/{userId:guid}");
+        Tags("Users");
         AllowAnonymous();
     }
 

@@ -10,6 +10,15 @@ public static class DependencyInjection
     {
         // Outros servicos...
 
+        services.AddTransient<ActivityService>();
+        services.AddTransient<AdministratorService>();
+        services.AddTransient<CategoryService>();
+        services.AddTransient<ClientService>();
+        services.AddTransient<GuideService>();
+        services.AddTransient<PackageService>();
+        services.AddTransient<PaymentService>();
+        services.AddTransient<PostService>();
+        services.AddTransient<ReserveService>();
         services.AddTransient<UserService>();
         return services;
     }
