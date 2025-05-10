@@ -1,0 +1,117 @@
+@using Root.Application.DTOs.ActivityDto
+@using Root.Application.DTOs.PackageDtos
+<div class="modal fade" id="newPackageModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Pacote</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome</label>
+                    <input @bind="NewPackage.Name" class="form-control" type="text" id="nome" placeholder="Nome do Pacote">
+                </div>
+                <div class="mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <textarea @bind="NewPackage.Description" class="form-control" type="text" id="descricao" placeholder="Descricao do Pacote"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="atividades" class="form-label">Atividades</label>
+                    <div class="d-flex">
+                        <select @bind="CurrentActivityId" id="atividades" class="form-select">
+                            <option selected>Selecione uma actividade</option>
+                            @foreach (var act in ListActivities)
+                            {
+                                <option value="@act.Id">@act.Name</option>
+                            }
+                        </select>
+                        <button class="btn btn-primary" @onclick="AddActivity">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                    </div>
+                    <ol class="list-group list-group-numbered">
+                        @foreach (var act in ListActivitiesToAdd)
+                        {
+                            <li class="list-group-item d-flex align-items-center justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">@act.Name</div>
+                                    @act.Description
+                                </div>
+                                <button class="btn" @onclick="() => { RemoveActivity(act.Id);}">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </li>
+                        }
+                    </ol>
+                </div>
+                <small class="text-danger">@erro</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="CreateNewPackage">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter] public Action OnPackageCreated { get; set; }
+    public CreatePackageDto NewPackage { get; set; } = new();
+    public string erro { get; set; } = "";
+
+    public List<ListActivityDto> ListActivities { get; set; } = [];
+    public List<ListActivityDto> ListActivitiesToAdd { get; set; } = [];
+    public Guid CurrentActivityId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListActivities = await activities.GetAllActivitiesAsync();
+    }
+
+    public void AddActivity()
+    {
+        var currentAct = ListActivities.First(c => c.Id == CurrentActivityId);
+        if (!ListActivitiesToAdd.Contains(currentAct))
+            ListActivitiesToAdd.Add(currentAct);
+        StateHasChanged();
+    }
+    
+    public void RemoveActivity(Guid actId)
+    {
+        var currentAct = ListActivities.First(c => c.Id == actId);
+        if (ListActivitiesToAdd.Contains(currentAct))
+            ListActivitiesToAdd.Remove(currentAct);
+        StateHasChanged();
+    }
+
+    public async void CreateNewPackage()
+    {
+        if (string.IsNullOrEmpty(NewPackage.Name)
+            || string.IsNullOrEmpty(NewPackage.Description)
+            || !(ListActivitiesToAdd.Count > 0))
+        {
+            erro = "Por favor preencha todos campos!!";
+            StateHasChanged();
+            return;
+        }
+        
+        ListActivitiesToAdd.ForEach(act =>
+        {
+            NewPackage.ActivityIds.Add(act.Id);
+        });
+
+        var result = await packages.CreateNewPackageAsync(NewPackage);
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar criar o pacote!!";
+            StateHasChanged();
+            return;
+        }
+        
+        StateHasChanged();
+        OnPackageCreated.Invoke();
+        await JS.InvokeVoidAsync("closeModal", "newPackageModal");
+    }
+}

@@ -21,6 +21,11 @@ public class UserRepository(
     {
         var newuser = await _dbContext.Users.AddAsync(entity);
 
+        var entriesCount = await _dbContext.SaveChangesAsync();
+        if (!(entriesCount > 0))
+            return false;
+
+
         if (newuser.Entity.Type == UserType.Administrator)
         {
             await adminRepository.CreateAsync(new Administrator()
@@ -51,11 +56,6 @@ public class UserRepository(
                 Surname = ""
             });
         }
-
-        var entriesCount = await _dbContext.SaveChangesAsync();
-        if (!(entriesCount > 0))
-            return false;
-
 
         return true;
     }

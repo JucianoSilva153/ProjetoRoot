@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Root.Infrastructure.Service;
 
 namespace Root.Infrastructure;
 
@@ -8,6 +9,7 @@ public static class DependencyInjection
     {
         
         //outros servicos
+        services.AddScoped<JwtTokenService>();
         
         return services;
     }

@@ -1,0 +1,55 @@
+@layout DashboardLayout
+@page "/dashboard/packages"
+@using Root.Application.DTOs.PackageDtos
+
+<div class="d-flex w-100 flex-row align-content-between">
+    <div class="w-75">
+        <h3>Pacotes</h3>
+        <small>Gestao de Pacotes</small>
+    </div>
+    <div class="d-flex justify-content-end align-items-center w-25">
+        <button class="btn btn-primary rounded-pill" @onclick='() => { JS.InvokeVoidAsync("openModal", "newPackageModal"); }'>
+            <i class="bi bi-plus-circle"></i>
+            <span>Novo Pacote</span>
+        </button>
+    </div>
+</div>
+
+<NewPackageModal OnPackageCreated="async () => { await OnInitializedAsync();}"></NewPackageModal>
+
+<div class="row g-4 mt-4 justify-content-center">
+    @foreach (var pack in ListPackage)
+    {
+        <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+            <div class="package-item">
+                <div class="overflow-hidden">
+                    <img class="img-fluid" src="img/package-3.jpg" alt="">
+                </div>
+                <div class="d-flex border-bottom">
+                    <small class="flex-fill text-center border-end py-2"><i class="bi bi-hourglass-bottom text-primary me-2"></i>9h</small>
+                    <small class="flex-fill text-center py-2"><i class="bi bi-pin-angle-fill text-primary me-2"></i>@pack.ActivityNames.Count Atividades</small>
+                </div>
+                <div class="text-center p-4">
+                    <h3 class="mb-1">@pack.Name</h3>
+                    <p>@pack.Description</p>
+                    <div class="d-flex justify-content-center mb-2">
+                        <a href="#" class="btn btn-sm btn-primary px-3 border-end" style="border-radius: 30px 0 0 30px;">Editar</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger px-3" style="border-radius: 0 30px 30px 0;">Remover</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+
+    public List<ListPackageDto> ListPackage { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListPackage = await packages.GetAllPackagesAsync();
+        StateHasChanged();
+    }
+
+}

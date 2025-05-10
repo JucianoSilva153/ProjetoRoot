@@ -4,7 +4,7 @@ using Root.Application.Services;
 
 namespace Root.API.Endpoints.UserEndpoints;
 
-public class ListUserByIdEndpoint(UserService userService) : Endpoint<Guid, ListUserDto>
+public class ListUserByIdEndpoint(UserService userService) : Endpoint<Guid, ListUserDto?>
 {
     public override void Configure()
     {

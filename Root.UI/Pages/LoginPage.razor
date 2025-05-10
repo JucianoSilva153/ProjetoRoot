@@ -1,0 +1,83 @@
+@page "/login"
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using System.Text.RegularExpressions
+@using Root.Application.DTOs.UserDtos
+
+<div class="container-fluid login-container d-flex align-items-center">
+    <div class="row w-100">
+        <div class="col-lg-6 d-none d-lg-block login-img"></div>
+
+        <div class="col-lg-6 d-flex align-items-center justify-content-center">
+            <div class="form-section w-75">
+                <h2 class="text-center mb-4">Entrar</h2>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Usuário ou Email</label>
+                    <input type="email" @oninput='() => { erro = ""; }' @bind="EmailOrUsername" id="email" class="form-control" placeholder="'Paulo Andre' ou 'pauloandre@gmail.com'"/>
+                </div>
+                <div class="mb-3">
+                    <label for="senha" class="form-label">Palavra-Passe</label>
+                    <input type="password" @oninput='() => { erro = ""; }' @bind="loginDto.Password" id="senha" class="form-control" placeholder="Sua Palavra-Passe"/>
+                </div>
+                <button type="submit" @onclick="Login" class="btn btn-primary w-100">Entrar</button>
+                <small>
+                    <span class="text-danger">@erro</span>
+                </small>
+                <div class="text-center mt-3">
+                    <small>Não tem conta? <a href="signin">Cadastre-se</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    public LoginUserDto loginDto { get; set; } = new();
+    public string EmailOrUsername = "";
+    string erro { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = await LocalStorage.GetItemAsync("currentUser");
+        if (currentUser is not null)
+        {
+            Navigator.NavigateTo("/dashboard");
+            return;
+        }
+    }
+
+    public async void Login()
+    {
+        if (string.IsNullOrEmpty(EmailOrUsername) || string.IsNullOrEmpty(loginDto.Password))
+        {
+            erro = "Por favor preencha todos os campos!";
+            StateHasChanged();
+            return;
+        }
+
+        var regex = new Regex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+        var isEmail = regex.IsMatch(EmailOrUsername);
+
+        if (isEmail)
+            loginDto.Email = EmailOrUsername;
+        else
+            loginDto.UserName = EmailOrUsername;
+
+        var result = await users.LoginAsync(loginDto);
+        if (result is null)
+        {
+            erro = "Tentativa de Login falhou! Usuario nao encontrado ou credenciais erradas!";
+            StateHasChanged();
+            return;
+        }
+
+        erro = $"Login efetuado com Sucesso!!Id do Usuario = {result.User.Id}";
+        StateHasChanged();
+
+        await LocalStorage.SetItemAsync("currentUser", JsonSerializer.Serialize(result));
+        Navigator.NavigateTo("/dashboard");
+    }
+    
+
+}

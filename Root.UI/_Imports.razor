@@ -10,3 +10,13 @@
 @using Root.UI.Layout
 @using Root.UI.Pages.FrontPageComponents
 @using Root.UI.Layout.LayoutComponents
+@using Root.UI.Services
+@using Root.UI.Services.APIServices
+@using Root.UI.Pages.Dashboard.Modals
+
+@inject UserService users
+@inject PackageService packages
+@inject ActivityService activities
+@inject LocalStorageService LocalStorage
+@inject NavigationManager Navigator
+@inject IJSRuntime JS

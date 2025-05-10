@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="APIServices\" />
+      <ProjectReference Include="..\Root.Application\Root.Application.csproj" />
     </ItemGroup>
 
 </Project>

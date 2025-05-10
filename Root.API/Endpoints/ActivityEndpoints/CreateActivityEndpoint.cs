@@ -10,7 +10,6 @@ public class CreateActivityEndpoint(ActivityService activityService) : Endpoint<
     {
         Post("/activities");
         Description(x => x.WithTags("Activities"));
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CreateActivityDto req, CancellationToken ct)

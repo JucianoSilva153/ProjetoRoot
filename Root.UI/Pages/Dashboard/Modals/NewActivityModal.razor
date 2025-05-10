@@ -1,0 +1,83 @@
+@using Root.Application.DTOs.ActivityDto
+@using Root.Domain.Enums
+<div class="modal fade" id="newActivityModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Atividade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input @oninput='() => { erro = ""; }' @bind="NewActivity.Name" type="text" class="form-control" id="nome" placeholder="Nome da atividade">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descricao</label>
+                        <textarea @oninput='() => { erro = ""; }' @bind="NewActivity.Description" class="form-control" id="descricao" rows="3"></textarea>
+                    </div>
+                    <div class="d-flex gap-2 w-100">
+                        <div class="mb-3 w-auto">
+                            <label for="duracao" class="form-label">Duracao (em horas)</label>
+                            <input @oninput='() => { erro = ""; }' @bind="NewActivity.DurationTime" class="form-control" type="number" id="duracao" placeholder="Duracao da Atividade em horas">
+                        </div>
+                        <div class="mb-3 w-auto">
+                            <label for="preco" class="form-label">Preco</label>
+                            <input @oninput='() => { erro = ""; }' @bind="NewActivity.Price" class="form-control" type="number" id="preco" placeholder="Preco da Actividade">
+                        </div>
+                        <div class="mb-3 w-auto">
+                            <label @bind="NewActivity.Type" for="tipo" class="form-label">Tipo de atividade</label>
+                            <select @oninput='() => { erro = ""; }' class="form-select" id="tipo" aria-label="Tipo de Atividade">
+                                <option value="@ActivityType.None" selected="">Tipo de Atividade</option>
+                                <option value="@ActivityType.Adventure">@ActivityType.Adventure.ToFriendlyString()</option>
+                                <option value="@ActivityType.Cultural">@ActivityType.Cultural.ToFriendlyString()</option>
+                                <option value="@ActivityType.Nature">@ActivityType.Nature.ToFriendlyString()</option>
+                                <option value="@ActivityType.Recreational">@ActivityType.Recreational.ToFriendlyString()</option>
+                            </select>
+                        </div>
+                    </div>
+                    <small class="text-danger">@erro</small>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="CreateNewActivity">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public Action OnActivityCreated { get; set; }
+    public CreateActivityDto NewActivity { get; set; } = new();
+    public string erro { get; set; } = "";
+
+    public async void CreateNewActivity()
+    {
+        if (string.IsNullOrEmpty(NewActivity.Name)
+            || string.IsNullOrEmpty(NewActivity.Description)
+            || !(NewActivity.Price > 0)
+            || NewActivity.Type == ActivityType.None)
+        {
+            erro = "Por favor, preencha todos os campos!!";
+            StateHasChanged();
+            return;
+        }
+
+        var result = await activities.CreateNewActivitieAsync(NewActivity);
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar criar uma nova atividade!!";
+            StateHasChanged();
+            return;
+        }
+        
+        StateHasChanged();
+        OnActivityCreated.Invoke();
+        await JS.InvokeVoidAsync("closeModal", "newActivityModal");
+    }
+    
+}

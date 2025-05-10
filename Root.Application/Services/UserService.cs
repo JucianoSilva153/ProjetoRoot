@@ -109,4 +109,33 @@ public class UserService(IUserRepository userRepository)
 
         return false;
     }
+
+    public async Task<ListUserDto?> LoginAsync(LoginUserDto userDto)
+    {
+        try
+        {
+            var users = await userRepository.GetAllAsync();
+            var currentUser = users.FirstOrDefault(u => (u.Email == userDto.Email && u.Password == userDto.Password)
+                                                        || (u.UserName == userDto.UserName &&
+                                                            u.Password == userDto.Password));
+
+            if (currentUser is not null)
+            {
+                return new ListUserDto
+                {
+                    Id = currentUser.Id,
+                    Contact = currentUser.Contact,
+                    Email = currentUser.Email,
+                    Type = currentUser.Type,
+                    UserName = currentUser.UserName
+                };
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Erro ao tentar fazer login!!!");
+        }
+
+        return null;
+    }
 }

@@ -8,5 +8,5 @@ public class CreatePackageDto
     public string Description { get; set; }
     public PackageType Type { get; set; }
 
-    public List<Guid> ActivityIds { get; set; }
+    public List<Guid> ActivityIds { get; set; } = [];
 }
