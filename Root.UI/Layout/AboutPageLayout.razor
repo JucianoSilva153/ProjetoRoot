@@ -1,3 +1,5 @@
+@using System.Text.Json
+@using Root.Application.DTOs.UserDtos
 @inherits LayoutComponentBase
 
 
@@ -36,21 +38,18 @@
 
 <!-- Navbar & Hero Start -->
 <div class="container-fluid position-relative p-0">
-    <NavMenu></NavMenu>
+    <NavMenu IsLoggedIn="IsLoggedIn" PageType="about"></NavMenu>
 
     <div class="container-fluid bg-primary py-5 mb-5 hero-header">
         <div class="container py-5">
             <div class="row justify-content-center py-5">
                 <div class="col-lg-10 pt-lg-5 mt-lg-5 text-center">
-                    <h1 class="display-3 text-white animated slideInDown">Sobre Nós</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb justify-content-center">
-                            <li class="breadcrumb-item">
-                                <a href="#">Home</a>
-                            </li>
-                            <li class="breadcrumb-item text-white active" aria-current="page">Sobre Nós</li>
-                        </ol>
-                    </nav>
+                    <h1 class="display-3 text-white mb-3 animated slideInDown">Disfrute de Sua Viagem connosco</h1>
+                    <p class="fs-4 text-white mb-4 animated slideInDown">Tempor erat elitr rebum at clita diam amet diam et eos erat ipsum lorem sit</p>
+                    @* <div class="position-relative w-75 mx-auto animated slideInDown"> *@
+                    @*     <input class="form-control border-0 rounded-pill w-100 py-3 ps-4 pe-5" type="text" placeholder="Eg: Thailand"> *@
+                    @*     <button type="button" class="btn btn-primary rounded-pill py-2 px-4 position-absolute top-0 end-0 me-2" style="margin-top: 7px;">Search</button> *@
+                    @* </div> *@
                 </div>
             </div>
         </div>
@@ -151,3 +150,23 @@
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
     <i class="bi bi-arrow-up"></i>
 </a>
+
+
+@code
+{
+    public LoginListUserDto CurrentUser { get; set; } = new LoginListUserDto { User = new ListUserDto(), Token = "" };
+    bool IsLoggedIn = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = await LocalStorage.GetItemAsync("currentUser");
+        if (currentUser is null)
+        {
+            Navigator.NavigateTo("/login");
+            return;
+        }
+
+        IsLoggedIn = true;
+        CurrentUser = JsonSerializer.Deserialize<LoginListUserDto>(currentUser) ?? new LoginListUserDto();
+    }
+}

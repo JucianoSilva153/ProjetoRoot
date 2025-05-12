@@ -20,7 +20,9 @@ public class GuideRepository(RootDbContext dbContext) : IGuideRepository
 
     public async Task<Guide?> GetByIdAsync(Guid id)
     {
-        return await _dbContext.Guides.FirstOrDefaultAsync(guide => guide.Id == id);
+        return await _dbContext.Guides
+            .Include(g => g.User)
+            .FirstOrDefaultAsync(guide => guide.Id == id);
     }
 
     public async Task<IEnumerable<Guide>> GetAllAsync()

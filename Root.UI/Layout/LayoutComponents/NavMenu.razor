@@ -12,21 +12,58 @@
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <div class="navbar-nav ms-auto py-0">
             <NavLink href="/#" class="nav-item nav-link">Home</NavLink>
-            <NavLink href="/about" class="nav-item nav-link">Sobre</NavLink>
-            <NavLink href="#services" class="nav-item nav-link">Serviços</NavLink>
-            <NavLink href="/packages" class="nav-item nav-link">Pacotes</NavLink>
-            @* <div class="nav-item dropdown"> *@
-            @*     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Pages</a> *@
-            @*     <div class="dropdown-menu m-0"> *@
-            @*         <a href="destination.html" class="dropdown-item">Destination</a> *@
-            @*         <a href="booking.html" class="dropdown-item">Booking</a> *@
-            @*         <a href="team.html" class="dropdown-item">Travel Guides</a> *@
-            @*         <a href="testimonial.html" class="dropdown-item">Testimonial</a> *@
-            @*         <a href="404.html" class="dropdown-item">404 Page</a> *@
-            @*     </div> *@
-            @* </div> *@
-            <a href="#contacts" class="nav-item nav-link">Contactos</a>
+            @if (ShowMenuSobre)
+            {
+                <NavLink href="/about" class="nav-item nav-link" style="display: @ShowMenuSobre;" hidden="@ShowMenuSobre">Sobre</NavLink>
+            }
+            @if (ShowMenuServicos)
+            {
+                <NavLink href="#services" class="nav-item nav-link" style="display: @ShowMenuServicos;">Serviços</NavLink>
+            }
+            @if (ShowMenuPacotes)
+            {
+                <NavLink href="/packages" class="nav-item nav-link" style="display: @ShowMenuPacotes;">Pacotes</NavLink>
+            }
+            @if (ShowMenuContactos)
+            {
+                <NavLink href="#contacts" class="nav-item nav-link" style="display: @ShowMenuContactos;">Contactos</NavLink>
+            }
         </div>
-        <a href="login" class="btn btn-primary rounded-pill py-2 px-4">Entrar</a>
+        @if (IsLoggedIn)
+        {
+            <div class="d-flex gap-3">
+                <a href="login" class="d-flex  text-lg-center justify-content-center align-items-center rounded-pill">
+                    <i style="font-size: 30px" class="bi bi-person-circle"></i>
+                </a>
+                <a href="login" class="d-flex  text-lg-center justify-content-center align-items-center rounded-pill">
+                    <i class="bi bi-cart-fill" style="font-size: 30px"></i>
+                </a>
+            </div>
+        }
+        else
+        {
+            <a href="login" class="btn btn-primary rounded-pill py-2 px-4">
+                <span>Entrar</span>
+            </a>
+        }
     </div>
 </nav>
+
+@code
+{
+    [Parameter] public bool IsLoggedIn { get; set; }
+    [Parameter] public string PageType { get; set; } = "";
+
+
+    public bool ShowMenuSobre => PageType == "package" || PageType == "about" ? false : true;
+
+    public bool ShowMenuPacotes => PageType == "package" || PageType == "about" ? false : true;
+
+    public bool ShowMenuServicos => PageType == "package" || PageType == "about" ? false : true;
+
+    public bool ShowMenuContactos => PageType == "package" || PageType == "about" ? false : true;
+
+    protected override void OnInitialized()
+    {
+    }
+}

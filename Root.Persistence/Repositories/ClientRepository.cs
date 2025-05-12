@@ -20,7 +20,9 @@ public class ClientRepository(RootDbContext dbContext) : IClientRepository
 
     public async Task<Client?> GetByIdAsync(Guid id)
     {
-        return await _dbContext.Clients.FirstOrDefaultAsync(client => client.Id == id);
+        return await _dbContext.Clients
+            .Include(g => g.User)
+            .FirstOrDefaultAsync(guide => guide.Id == id);
     }
 
     public async Task<IEnumerable<Client>> GetAllAsync()

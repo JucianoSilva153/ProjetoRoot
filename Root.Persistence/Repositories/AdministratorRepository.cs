@@ -20,7 +20,9 @@ public class AdministratorRepository(RootDbContext dbContext) : IAdministratorRe
 
     public async Task<Administrator?> GetByIdAsync(Guid id)
     {
-        return await _dbContext.Administrators.FirstOrDefaultAsync(admin => admin.Id == id);
+        return await _dbContext.Administrators
+            .Include(g => g.User)
+            .FirstOrDefaultAsync(guide => guide.Id == id);
     }
 
     public async Task<IEnumerable<Administrator>> GetAllAsync()

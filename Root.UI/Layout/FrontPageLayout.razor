@@ -1,3 +1,5 @@
+@using System.Text.Json
+@using Root.Application.DTOs.UserDtos
 @inherits LayoutComponentBase
 
 
@@ -36,7 +38,7 @@
 
 <!-- Navbar & Hero Start -->
 <div class="container-fluid position-relative p-0">
-    <NavMenu></NavMenu>
+    <NavMenu IsLoggedIn="IsLoggedIn" PageType="front"></NavMenu>
 
     <div class="container-fluid bg-primary py-5 mb-5 hero-header">
         <div class="container py-5">
@@ -148,3 +150,23 @@
 <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
     <i class="bi bi-arrow-up"></i>
 </a>
+
+
+@code
+{
+    public LoginListUserDto CurrentUser { get; set; } = new LoginListUserDto { User = new ListUserDto(), Token = "" };
+    bool IsLoggedIn = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = await LocalStorage.GetItemAsync("currentUser");
+        if (currentUser is null)
+        {
+            IsLoggedIn = false; 
+            return;
+        }
+
+        IsLoggedIn = true;
+        CurrentUser = JsonSerializer.Deserialize<LoginListUserDto>(currentUser) ?? new LoginListUserDto();
+    }
+}

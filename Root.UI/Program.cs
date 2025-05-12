@@ -12,6 +12,9 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https:/
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<PackageService>();
 builder.Services.AddScoped<ActivityService>();
+builder.Services.AddScoped<GuideService>();
+builder.Services.AddScoped<AdministratorService>();
+builder.Services.AddScoped<ClientService>();
 builder.Services.AddScoped<LocalStorageService>();
 
 await builder.Build().RunAsync();

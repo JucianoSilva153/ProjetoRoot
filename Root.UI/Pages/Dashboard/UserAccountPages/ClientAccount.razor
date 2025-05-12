@@ -1,0 +1,95 @@
+@using Root.Application.DTOs.ClientDtos
+<div class="d-flex w-100 flex-row align-content-between mb-4">
+    <div class="w-75 d-flex align-items-center gap-4">
+        <div>
+            <h3>Minha Conta</h3>
+            <small class="text-danger">@erro</small>
+            <small class="text-success">@sucesso</small>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end align-items-center w-25">
+        <button class="btn btn-primary rounded-pill" @onclick='UpdateNewClient'>
+            <i class="bi bi-plus-circle"></i>
+            <span>Guardar</span>
+        </button>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label for="nome" class="form-label">Nome</label>
+    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewClient.Name" id="nome" class="form-control" placeholder="Seu nome"/>
+</div>
+<div class="mb-3">
+    <label for="sobrenome" class="form-label">Sobrenome</label>
+    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewClient.Surname" id="sobrenome" class="form-control" placeholder="Seu sobrenome"/>
+</div>
+<div class="mb-3">
+    <label for="local" class="form-label">Nacionalidade</label>
+    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewClient.Nationality" id="local" class="form-control" placeholder="Sua nacionalidade"/>
+</div>
+<div class="mb-3">
+    <label for="nascimento" class="form-label">Data de Nascimento</label>
+    <input required @oninput='() => { erro = ""; }' type="date" @bind="NewClient.BirthDate" id="nascimento" class="form-control"/>
+</div>
+
+
+@code {
+    [Parameter] public Guid CurrentUserSpecificId { get; set; }
+
+    public string erro { get; set; } = "";
+    public string sucesso { get; set; } = "";
+
+    public ListClientsDto NewClient { get; set; } = new();
+    public ListClientsDto OldClient { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var getClient = await clients.GetClientByIdAsync(CurrentUserSpecificId);
+        NewClient = getClient ?? new();
+        OldClient = new ListClientsDto()
+        {
+            Id = NewClient.Id,
+            Name = NewClient.Name,
+            Surname = NewClient.Surname,
+            UserId = NewClient.UserId,
+            UserName = NewClient.UserName,
+            Nationality = NewClient.Nationality,
+            BirthDate = NewClient.BirthDate
+        };
+    }
+
+    private async Task UpdateNewClient()
+    {
+        if (string.IsNullOrEmpty(NewClient.Name)
+            || string.IsNullOrEmpty(NewClient.Surname)
+            || string.IsNullOrEmpty(NewClient.Nationality))
+        {
+            erro = "Por favor preencha todos os campos!";
+            StateHasChanged();
+            return;
+        }
+
+        var clientToUpdate = new UpdateClientDto()
+        {
+            Id = NewClient.Id,
+            Name = NewClient.Name == OldClient.Name ? null : NewClient.Name,
+            Surname = NewClient.Surname == OldClient.Surname ? null : NewClient.Surname,
+            Nationality = NewClient.Nationality == OldClient.Nationality ? null : NewClient.Nationality,
+            BirthDate = NewClient.BirthDate == OldClient.BirthDate ? null : NewClient.BirthDate
+        };
+
+        var result = await clients.UpdateClientAsync(clientToUpdate);
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar atualizar dados!!";
+            StateHasChanged();
+            return;
+        }
+
+        await OnInitializedAsync();
+        sucesso = "Dados Atualizados!!";
+        erro = "";
+        StateHasChanged();
+    }
+
+}

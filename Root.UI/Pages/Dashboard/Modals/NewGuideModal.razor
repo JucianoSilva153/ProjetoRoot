@@ -1,0 +1,71 @@
+@using Root.Application.DTOs.GuideDtos
+@using Root.Application.DTOs.UserDtos
+@using Root.Domain.Enums
+
+<div class="modal fade" id="newGuiaModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Atividade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome de Usuario</label>
+                    <input required @oninput='() => { erro = ""; }' type="text" @bind="User.UserName" id="nome" class="form-control" placeholder="Nome de usuario do guia"/>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input required @oninput='() => { erro = ""; }' type="email" @bind="User.Email" id="email" class="form-control" placeholder="email do guia"/>
+                </div>
+                <div class="mb-3">
+                    <label for="contacto" class="form-label">Contacto</label>
+                    <input required @oninput='() => { erro = ""; }' type="number" @bind="User.Contact" id="contacto" class="form-control" placeholder="Ex.: 999 999 999"/>
+                </div>
+
+                <small>
+                    <span class="text-danger">@erro</span>
+                </small>
+                <small class="text-danger">@erro</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="CreateNewGuide">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public Action OnGuideCreated { get; set; }
+    public string erro { get; set; } = "";
+    public CreateUserDto User { get; set; } = new();
+
+    private async void CreateNewGuide()
+    {
+
+
+        if (string.IsNullOrEmpty(User.UserName)
+            || string.IsNullOrEmpty(User.Contact)
+            || string.IsNullOrEmpty(User.Email))
+        {
+            erro = "Por favor, preencha todos os campos!!";
+            return;
+        }
+
+        User.Type = UserType.Guide;    
+        User.Password = "000000";    
+        var result = await users.NewUserAsync(User);
+
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar criar conta do guia! Por favor tente mais tarde!";
+            return;
+        }
+        StateHasChanged();
+        OnGuideCreated.Invoke();
+        await JS.InvokeVoidAsync("closeModal", "newGuiaModal");
+    }
+
+}

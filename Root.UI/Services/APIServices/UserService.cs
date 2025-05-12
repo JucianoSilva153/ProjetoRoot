@@ -9,6 +9,7 @@ public class UserService(HttpClient client, LocalStorageService localStorageServ
 {
     public async Task<bool> NewUserAsync(CreateUserDto newUser)
     {
+        await SetAuthorizationHeaderAsync();
         try
         {
             var result = await client.PostAsJsonAsync("users", newUser);
@@ -25,6 +26,26 @@ public class UserService(HttpClient client, LocalStorageService localStorageServ
         return false;
     }
 
+    public async Task<bool> IsUserLoggedIn()
+    {
+        await SetAuthorizationHeaderAsync();
+        try
+        {
+            var result = await client.GetAsync("auth/check");
+            if (result.IsSuccessStatusCode)
+            {
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Erro ao tentar verificar autenticacao -> " + e);
+        }
+
+        return false;
+    }
+
+    
     public async Task<LoginListUserDto?> LoginAsync(LoginUserDto loginDto)
     {
         try

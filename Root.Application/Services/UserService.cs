@@ -4,7 +4,10 @@ using Root.Domain.Interfaces;
 
 namespace Root.Application.Services;
 
-public class UserService(IUserRepository userRepository)
+public class UserService(IUserRepository userRepository, 
+    IAdministratorRepository administratorRepository, 
+    IClientRepository clientRepository,
+    IGuideRepository guideRepository)
 {
     public async Task<bool> CreateUserAsync(CreateUserDto userDto)
     {
@@ -110,6 +113,33 @@ public class UserService(IUserRepository userRepository)
         return false;
     }
 
+    public async Task<Guid?> GetUserSpecificTypeIdAsync(Guid userId)
+    {
+        try
+        {
+            var admin = (await administratorRepository.GetAllAsync())
+                .FirstOrDefault(a => a.UserId == userId);
+            if (admin is not null)
+                return admin.Id;
+            
+            var guide = (await guideRepository.GetAllAsync())
+                .FirstOrDefault(a => a.UserId == userId);
+            if (guide is not null)
+                return guide.Id;
+            
+            var client = (await clientRepository.GetAllAsync())
+                .FirstOrDefault(a => a.UserId == userId);
+            if (client is not null)
+                return client.Id;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Erro ao tentar procurar Id" + e);
+        }
+
+        return null;
+    }
+    
     public async Task<ListUserDto?> LoginAsync(LoginUserDto userDto)
     {
         try

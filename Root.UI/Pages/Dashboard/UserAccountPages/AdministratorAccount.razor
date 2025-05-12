@@ -1,0 +1,84 @@
+@using Root.Application.DTOs.AdminDtos
+<div class="d-flex w-100 flex-row align-content-between mb-4">
+    <div class="w-75 d-flex align-items-center gap-4">
+        <div>
+            <h3>Minha Conta</h3>
+            <small class="text-danger">@erro</small>
+            <small class="text-success">@sucesso</small>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end align-items-center w-25">
+        <button class="btn btn-primary rounded-pill" @onclick='UpdateNewAdmin'>
+            <i class="bi bi-plus-circle"></i>
+            <span>Guardar</span>
+        </button>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label for="nome" class="form-label">Nome</label>
+    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewAdmin.Name" id="nome" class="form-control" placeholder="Seu nome"/>
+</div>
+<div class="mb-3">
+    <label for="sobrenome" class="form-label">Sobrenome</label>
+    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewAdmin.Surname" id="sobrenome" class="form-control" placeholder="Seu sobrenome"/>
+</div>
+
+
+@code {
+    
+    [Parameter] public Guid CurrentUserSpecificId { get; set; }
+    
+    public string erro { get; set; } = "";
+    public string sucesso { get; set; } = "";
+    public ListAdminDto NewAdmin { get; set; } = new();
+    public ListAdminDto OldAdmin { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var getAdmin = await admins.GetAdminByIdAsync(CurrentUserSpecificId);
+        NewAdmin = getAdmin ?? new();
+        OldAdmin = new ListAdminDto()
+        {
+            Id = NewAdmin.Id,
+            Name = NewAdmin.Name,
+            Role = NewAdmin.Role,
+            Surname = NewAdmin.Surname,
+            AcessLeves = NewAdmin.AcessLeves.ToList() ?? [],
+            UserId = NewAdmin.UserId,
+            UserName = NewAdmin.UserName
+        };
+    }
+    
+    private async Task UpdateNewAdmin()
+    {
+        if (string.IsNullOrEmpty(NewAdmin.Name)
+            || string.IsNullOrEmpty(NewAdmin.Surname))
+        {
+            erro = "Por favor preencha todos os campos!";
+            StateHasChanged();
+            return;
+        }
+
+        var adminToUpdate = new UpdateAdminDto
+        {
+            Id = NewAdmin.Id,
+            Name = NewAdmin.Name == OldAdmin.Name ? null : NewAdmin.Name,
+            Surname = NewAdmin.Surname == OldAdmin.Surname ? null : NewAdmin.Surname
+        };
+
+        var result = await admins.UpdateAdminAsync(adminToUpdate);
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar atualizar dados!!";
+            StateHasChanged();
+            return;
+        }
+
+        await OnInitializedAsync();
+        sucesso = "Dados Atualizados!!";
+        erro = "";
+        StateHasChanged();
+    }
+
+}

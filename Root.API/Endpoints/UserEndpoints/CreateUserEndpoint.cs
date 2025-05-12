@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Root.Application.DTOs.UserDtos;
 using Root.Application.Services;
 
@@ -8,7 +9,7 @@ public class CreateUserEndpoint(UserService userService) : Endpoint<CreateUserDt
     {
         Post("/users");
         Description(x => x.WithTags("Users"));
-        AllowAnonymous();
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
     }
 
     public override async Task HandleAsync(CreateUserDto req, CancellationToken ct)

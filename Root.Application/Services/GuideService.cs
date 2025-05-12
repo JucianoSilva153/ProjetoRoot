@@ -17,13 +17,14 @@ public class GuideService(IGuideRepository guideRepository)
                 Idioms = dto.Idioms,
                 Description = dto.Description,
                 Location = dto.Location,
-                UserId = dto.UserId
+                UserId = dto.UserId,
+                Image = dto.Image
             };
 
             return await guideRepository.CreateAsync(guide);
         }
         catch (Exception ex)
-        {
+        {   
             Console.WriteLine("Erro ao criar guia: " + ex.Message);
         }
 
@@ -70,7 +71,9 @@ public class GuideService(IGuideRepository guideRepository)
                 Idioms = guide.Idioms,
                 Description = guide.Description,
                 Location = guide.Location,
-                UserId = guide.UserId
+                UserId = guide.UserId,
+                Image = guide.Image,
+                UserName = guide.User.UserName
             };
         }
         catch (Exception ex)
@@ -94,6 +97,7 @@ public class GuideService(IGuideRepository guideRepository)
             guide.Idioms = dto.Idioms ?? guide.Idioms;
             guide.Description = dto.Description ?? guide.Description;
             guide.Location = dto.Location ?? guide.Location;
+            guide.Image = dto.Image ?? guide.Image;
 
             return await guideRepository.UpdateAsync(guide);
         }

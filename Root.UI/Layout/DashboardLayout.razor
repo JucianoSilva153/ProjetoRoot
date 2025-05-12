@@ -1,14 +1,19 @@
 @using System.Text.Json
 @using Root.Application.DTOs.UserDtos
+@using Root.Domain.Enums
 @inherits LayoutComponentBase
 
 
 <!-- Sidebar -->
-<div class="sidebar d-flex flex-column vh-100" >
+<div class="sidebar d-flex flex-column vh-100">
     <!-- Logo no topo -->
-    <div class="logo ps-3 py-3">
-        <strong>R&R</strong>
-    </div>
+    <a href="/">
+        <div class="text-center ">
+            <h1 class="text-primary p-4">
+                <strong>R&R</strong>
+            </h1>
+        </div>
+    </a>
 
     <!-- Navegação com scroll vertical -->
     <div style="flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none;">
@@ -28,10 +33,12 @@
     <!-- Rodapé sempre fixo -->
     <div class="p-3 border-top">
         <div class="d-flex align-items-center">
-            <div>
-                <div class="fw-bold">Ann Smith</div>
-                <small>Administrator</small>
-            </div>
+            <a href="/dashboard/account">
+                <div>
+                    <div class="fw-bold">@CurrentUser.User.UserName</div>
+                    <small>@CurrentUser.User.Type.ToFriendlyString()</small>
+                </div>
+            </a>
         </div>
         <a href="#" class="nav-link text-danger mt-2 ps-0"
            @onclick='async () => { await LocalStorage.RemoveItemAsync("currentUser"); }'>
@@ -60,6 +67,8 @@
 
 @code
 {
+    public LoginListUserDto CurrentUser { get; set; } = new LoginListUserDto { User = new ListUserDto(), Token = "" };
+
     protected override async Task OnInitializedAsync()
     {
         var currentUser = await LocalStorage.GetItemAsync("currentUser");
@@ -69,6 +78,15 @@
             return;
         }
 
-        var user = JsonSerializer.Deserialize<ListUserDto>(currentUser);
+        CurrentUser = JsonSerializer.Deserialize<LoginListUserDto>(currentUser) ?? new LoginListUserDto();
+        if (!(await users.IsUserLoggedIn()))
+        {
+            Navigator.NavigateTo("/login");
+            await LocalStorage.RemoveItemAsync("currentUser");
+            Console.WriteLine("Usuario nao esta Autentiado!!");
+            return;
+        }
+
+        Console.WriteLine("Usuario Autentiado!!");
     }
 }

@@ -1,0 +1,36 @@
+@layout DashboardLayout
+@page "/dashboard/account"
+@using System.Text.Json
+@using Root.Application.DTOs.UserDtos
+@using Root.Domain.Enums
+
+@if (Type == UserType.Guide)
+{
+    <GuideAccount CurrentUserSpecificId="CurrentUser!.UserTypeId"></GuideAccount>
+}
+else if (Type == UserType.Administrator)
+{
+    <AdministratorAccount CurrentUserSpecificId="CurrentUser!.UserTypeId"></AdministratorAccount>
+}
+else if (Type == UserType.Client)
+{
+    <ClientAccount CurrentUserSpecificId="CurrentUser!.UserTypeId" ></ClientAccount>
+}
+
+@code {
+
+    public UserType? Type { get; set; }
+    public LoginListUserDto? CurrentUser { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = await LocalStorage.GetItemAsync("currentUser");
+        if (currentUser is not null)
+        {
+            CurrentUser = JsonSerializer.Deserialize<LoginListUserDto>(currentUser);
+            if (CurrentUser is not null)
+                Type = CurrentUser.User.Type;
+        }
+    }
+
+}

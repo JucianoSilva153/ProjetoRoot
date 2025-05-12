@@ -13,10 +13,15 @@
 @using Root.UI.Services
 @using Root.UI.Services.APIServices
 @using Root.UI.Pages.Dashboard.Modals
+@using Root.UI.Pages.Dashboard.UserAccountPages
 
 @inject UserService users
 @inject PackageService packages
 @inject ActivityService activities
+@inject GuideService guides
+@inject AdministratorService admins
+@inject ClientService clients
+
 @inject LocalStorageService LocalStorage
 @inject NavigationManager Navigator
 @inject IJSRuntime JS

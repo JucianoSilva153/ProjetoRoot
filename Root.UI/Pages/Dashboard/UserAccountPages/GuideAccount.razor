@@ -1,0 +1,181 @@
+@using Root.Application.DTOs.GuideDtos
+@using Root.Application.DTOs.UserDtos
+
+<div class="d-flex w-100 flex-row align-content-between mb-4">
+    <div class="w-75 d-flex align-items-center gap-4">
+        <div class="user-circle border border-2 border-primary">
+            <img src="@ImageDataUrl" alt="Foto do Usuário">
+        </div>
+        <div>
+            <h3>Minha Conta</h3>
+            <small class="text-danger">@erro</small>
+            <small class="text-success">@sucesso</small>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end align-items-center w-25">
+        <button class="btn btn-primary rounded-pill" @onclick='UpdateNewGuide'>
+            <i class="bi bi-plus-circle"></i>
+            <span>Guardar</span>
+        </button>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label for="nome" class="form-label">Nome</label>
+    <input @oninput='() => { erro = ""; }' @bind="NewGuide.Name" type="text" class="form-control" id="nome" placeholder="Nome do guia">
+</div>
+<div class="mb-3">
+    <label for="sobrenome" class="form-label">Sobrenome</label>
+    <input @oninput='() => { erro = ""; }' @bind="NewGuide.Surname" type="text" class="form-control" id="sobrenome" placeholder="Sobrenome do guia">
+</div>
+<div class="mb-3">
+    <label for="descricao" class="form-label">Descricao</label>
+    <textarea @oninput='() => { erro = ""; }' @bind="NewGuide.Description" class="form-control" id="descricao" rows="3"></textarea>
+</div>
+<div class="mb-3 w-auto">
+    <label for="localizacao" class="form-label">Localizacao</label>
+    <input @oninput='() => { erro = ""; }' @bind="NewGuide.Location" class="form-control" type="text" id="localizacao" placeholder="Localizacao do guia">
+</div>
+<div class="mb-3">
+    <label for="formFile" class="form-label">Imagem do Guia</label>
+    <InputFile class="form-control" type="file" id="formFile" OnChange="OnInputFileChange"/>
+</div>
+<div class="mb-3">
+    <label for="idioms" class="form-label">Idiomas</label>
+    <div class="d-flex">
+        <select @bind="CurrentIdiom" id="idioms" class="form-select">
+            <option selected value="">Selecione um idioma</option>
+            <option value="Português">Português</option>
+            <option value="Inglês">Inglês</option>
+            <option value="Francês">Francês</option>
+            <option value="Alemão">Alemão</option>
+        </select>
+        <button class="btn btn-primary" @onclick="AddIdiom">
+            <i class="bi bi-plus-circle-fill"></i>
+        </button>
+    </div>
+    <ol class="list-group list-group-numbered">
+        @foreach (var idiom in NewGuide.Idioms ?? [])
+        {
+            <li class="list-group-item d-flex align-items-center justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                    <div class="fw-bold">@idiom</div>
+                </div>
+                <button class="btn" @onclick="() => { RemoveIdiom(idiom); }">
+                    <i class="bi bi-x"></i>
+                </button>
+            </li>
+        }
+    </ol>
+</div>
+
+@code {
+    [Parameter] public Action OnGuideCreated { get; set; }
+    [Parameter] public Guid CurrentUserSpecificId { get; set; }
+    public string erro { get; set; } = "";
+    public string sucesso { get; set; } = "";
+    public ListGuidesDto OldGuide { get; set; } = new();
+    public ListGuidesDto NewGuide { get; set; } = new();
+    
+    private string ImageDataUrl =>
+        $"data:image/png;base64,{NewGuide.Image}";
+
+    public string CurrentIdiom { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var getGuide = await guides.GetGuideByIdAsync(CurrentUserSpecificId);
+        NewGuide = getGuide ?? new();
+        OldGuide = new ListGuidesDto
+        {
+            Id = getGuide?.Id ?? new Guid(),
+            Name = getGuide?.Name ?? "",
+            Surname = getGuide?.Surname ?? "",
+            Description = getGuide?.Description,
+            Location = getGuide?.Location,
+            Idioms = getGuide?.Idioms?.ToList(), // Cópia da lista para evitar referência compartilhada
+            Image = getGuide?.Image,
+            UserId = getGuide?.UserId ?? new Guid(),
+            UserName = getGuide?.UserName ?? ""
+        };
+    }
+
+    private async void UpdateNewGuide()
+    {
+        if (NewGuide.Idioms!.Count == 0)
+        {
+            erro = "Por favor adicione pelo menos um idioma!";
+            StateHasChanged();
+            return;
+        }
+
+        if (string.IsNullOrEmpty(NewGuide.Name)
+            || string.IsNullOrEmpty(NewGuide.Description)
+            || string.IsNullOrEmpty(NewGuide.Location)
+            || string.IsNullOrEmpty(NewGuide.Surname))
+        {
+            erro = "Por favor preencha todos os campos!";
+            StateHasChanged();
+            return;
+        }
+
+        var guideToUpdate = new UpdateGuideDto
+        {
+            Id = NewGuide.Id,
+            Description = NewGuide.Description == OldGuide.Description ? null : NewGuide.Description,
+            Location = NewGuide.Location == OldGuide.Location ? null : NewGuide.Location,
+            Name = NewGuide.Name == OldGuide.Name ? null : NewGuide.Name,
+            Idioms = NewGuide.Idioms == OldGuide.Idioms ? null : NewGuide.Idioms,
+            Surname = NewGuide.Surname == OldGuide.Surname ? null : NewGuide.Surname,
+            Image = NewGuide.Image == OldGuide.Image ? null : NewGuide.Image
+        };
+        
+
+        var result = await guides.UpdateGuideAsync(guideToUpdate);
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar criar um novo guia!!";
+            StateHasChanged();
+            return;
+        }
+
+        await OnInitializedAsync();
+        sucesso = "Dados Atualizados!!";
+        erro = "";
+        StateHasChanged();
+    }
+
+    private void AddIdiom()
+    {
+        if (string.IsNullOrEmpty(CurrentIdiom))
+        {
+            erro = "Por favor Selecione uma idioma!!";
+            StateHasChanged();
+            return;
+        }
+
+        if (NewGuide.Idioms is null)
+            NewGuide.Idioms = [];
+
+        if (!NewGuide.Idioms.Contains(CurrentIdiom))
+            NewGuide.Idioms.Add(CurrentIdiom);
+    }
+
+    private void RemoveIdiom(string idiom)
+    {
+        if (NewGuide.Idioms!.Contains(idiom))
+            NewGuide.Idioms.Remove(idiom);
+    }
+
+    private async void OnInputFileChange(InputFileChangeEventArgs obj)
+    {
+        IBrowserFile file = obj.File;
+        var buffer = new byte[file.Size];
+
+        using var stream = file.OpenReadStream();
+        await stream.ReadAsync(buffer);
+
+        NewGuide.Image = Convert.ToBase64String(buffer);
+    }
+
+}

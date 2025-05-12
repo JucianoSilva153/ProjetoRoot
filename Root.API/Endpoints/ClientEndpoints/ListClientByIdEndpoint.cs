@@ -4,7 +4,7 @@ using Root.Application.Services;
 
 namespace Root.API.Endpoints.ClientEndpoints;
 
-public class ListClientByIdEndpoint(ClientService clientService) : Endpoint<Guid, ListClientsDto?>
+public class ListClientByIdEndpoint(ClientService clientService) : EndpointWithoutRequest<ListClientsDto?>
 {
     public override void Configure()
     {
@@ -13,8 +13,10 @@ public class ListClientByIdEndpoint(ClientService clientService) : Endpoint<Guid
         AllowAnonymous();
     }
 
-    public override async Task<ListClientsDto?> ExecuteAsync(Guid clientId, CancellationToken ct)
+    public override async Task<ListClientsDto?> ExecuteAsync( CancellationToken ct)
     {
+        var clientIdStr = Route<string>("ClientId");
+        var clientId = Guid.Parse(clientIdStr);
         return await clientService.GetClientByIdAsync(clientId);
     }
 }

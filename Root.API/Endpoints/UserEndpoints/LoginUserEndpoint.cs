@@ -32,10 +32,18 @@ public class LoginUserEndpoint(UserService userService, JwtTokenService tokenSer
             return null;
         }
 
+        var specificUserId = await userService.GetUserSpecificTypeIdAsync(user.Id);
+        if (specificUserId is null)
+        {
+            await SendErrorsAsync(500, ct);
+            return null;
+        }
+        
         return new LoginListUserDto
         {
             Token = token,
-            User = user
+            User = user,
+            UserTypeId = specificUserId ?? Guid.Empty
         };
     }
 }
