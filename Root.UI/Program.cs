@@ -15,6 +15,7 @@ builder.Services.AddScoped<ActivityService>();
 builder.Services.AddScoped<GuideService>();
 builder.Services.AddScoped<AdministratorService>();
 builder.Services.AddScoped<ClientService>();
+builder.Services.AddScoped<ReserveService>();
 builder.Services.AddScoped<LocalStorageService>();
 
 await builder.Build().RunAsync();
