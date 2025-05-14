@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Root.Application.DTOs.PaymentDtos;
 using Root.Application.Services;
 
@@ -10,7 +11,7 @@ public class CreatePaymentEndpoint(PaymentService paymentService) : Endpoint<Cre
     {
         Post("/payments");
         Description(x => x.WithTags("Payments"));
-        AllowAnonymous();
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
     }
 
     public override async Task HandleAsync(CreatePaymentDto req, CancellationToken ct)

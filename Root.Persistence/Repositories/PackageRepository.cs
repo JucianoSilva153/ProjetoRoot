@@ -33,7 +33,9 @@ public class PackageRepository(RootDbContext dbContext) : IPackageRepository
 
     public async Task<Package?> GetByIdAsync(Guid id)
     {
-        return await _dbContext.Packages.FirstOrDefaultAsync(pack => pack.Id == id);
+        return await _dbContext.Packages
+            .Include(p => p.Activities)
+            .FirstOrDefaultAsync(pack => pack.Id == id);
     }
 
     public async Task<IEnumerable<Package>> GetAllAsync()
@@ -50,6 +52,7 @@ public class PackageRepository(RootDbContext dbContext) : IPackageRepository
 
         pack.Name = entity.Name;
         pack.Type = entity.Type;
+        pack.BasePrice = entity.BasePrice;
         pack.Description = entity.Description;
         pack.ModifiedAt = DateTime.Now;
         // pack.ModifiedBy = 

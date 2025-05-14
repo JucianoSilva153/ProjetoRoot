@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Root.Application.DTOs.ReserveDtos;
 using Root.Application.Services;
 
@@ -10,7 +11,7 @@ public class CreateReserveEndpoint(ReserveService reserveService) : Endpoint<Cre
     {
         Post("/reserves");
         Description(x => x.WithTags("Reserves"));
-        AllowAnonymous();
+        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
     }
 
     public override async Task HandleAsync(CreateReserveDto req, CancellationToken ct)

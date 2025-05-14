@@ -25,7 +25,10 @@ public class ReserveRepository(RootDbContext dbContext) : IReserveRepository
 
     public async Task<IEnumerable<Reserve>> GetAllAsync()
     {
-        return await _dbContext.Reserves.ToListAsync();
+        return await _dbContext.Reserves
+            .Include(r => r.Client)
+            .Include(r => r.Package)
+            .ToListAsync();
     }
 
     public async Task<bool> UpdateAsync(Reserve entity)
@@ -37,8 +40,9 @@ public class ReserveRepository(RootDbContext dbContext) : IReserveRepository
 
         reserve.ClientId = entity.ClientId;
         reserve.PackageId = entity.PackageId;
-        reserve.PeopleCount = entity.PeopleCount;
         reserve.TotalPrice = entity.TotalPrice;
+        reserve.PeopleCount = entity.PeopleCount;
+        reserve.Date = entity.Date;
         reserve.ModifiedAt = DateTime.Now;
         // reserve.ModifiedBy = 
 

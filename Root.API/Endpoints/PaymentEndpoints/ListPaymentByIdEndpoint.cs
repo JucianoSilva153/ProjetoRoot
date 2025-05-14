@@ -4,7 +4,7 @@ using Root.Application.Services;
 
 namespace Root.API.Endpoints.PaymentEndpoints;
 
-public class ListPaymentByIdEndpoint(PaymentService paymentService) : Endpoint<Guid, ListPaymentDto?>
+public class ListPaymentByIdEndpoint(PaymentService paymentService) : EndpointWithoutRequest<ListPaymentDto?>
 {
     public override void Configure()
     {
@@ -13,8 +13,10 @@ public class ListPaymentByIdEndpoint(PaymentService paymentService) : Endpoint<G
         AllowAnonymous();
     }
 
-    public override async Task<ListPaymentDto?> ExecuteAsync(Guid paymentId, CancellationToken ct)
+    public override async Task<ListPaymentDto?> ExecuteAsync(CancellationToken ct)
     {
+        var paymentIdStr = Route<string>("paymentId");
+        var paymentId = Guid.Parse(paymentIdStr);
         return await paymentService.GetPaymentByIdAsync(paymentId);
     }
 }

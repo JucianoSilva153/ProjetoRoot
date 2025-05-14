@@ -16,6 +16,7 @@ public class PackageService(IPackageRepository packageRepository)
                 Name = dto.Name,
                 Description = dto.Description,
                 Type = dto.Type,
+                BasePrice = dto.PackageBasePrice,
                 Activities = dto.ActivityIds?.Select(id => new Activity { Id = id }).ToList() ?? new()
             };
 
@@ -40,6 +41,9 @@ public class PackageService(IPackageRepository packageRepository)
                 Name = p.Name,
                 Description = p.Description,
                 Type = p.Type,
+                PackageBasePrice = p.BasePrice,
+                ActivitiesPackagePrice = p.Activities.Sum(a => a.Price),
+                Duration = (int) p.Activities.Sum(a => a.DurationTime),
                 ActivityNames = p.Activities?.Select(a => a.Name).ToList() ?? new()
             }).ToList();
         }
@@ -65,6 +69,9 @@ public class PackageService(IPackageRepository packageRepository)
                 Name = package.Name,
                 Description = package.Description,
                 Type = package.Type,
+                PackageBasePrice = package.BasePrice,
+                ActivitiesPackagePrice = package.Activities.Sum(a => a.Price),
+                Duration = (int) package.Activities.Sum(a => a.DurationTime),
                 ActivityNames = package.Activities?.Select(a => a.Name).ToList() ?? new()
             };
         }
@@ -87,6 +94,8 @@ public class PackageService(IPackageRepository packageRepository)
             package.Name = dto.Name ?? package.Name;
             package.Description = dto.Description ?? package.Description;
             package.Type = dto.Type ?? package.Type;
+            package.BasePrice = dto.PackageBasePrice ?? package.BasePrice;
+            
             if (dto.ActivityIds is not null)
                 package.Activities = dto.ActivityIds.Select(id => new Activity { Id = id }).ToList();
 

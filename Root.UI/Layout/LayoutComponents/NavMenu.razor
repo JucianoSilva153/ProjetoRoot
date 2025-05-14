@@ -1,3 +1,6 @@
+@using System.Text.Json
+@using Root.Application.DTOs.UserDtos
+
 <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0">
     <a href="" class="navbar-brand p-0">
         <h1 class="text-primary m-0">
@@ -14,19 +17,19 @@
             <NavLink href="/#" class="nav-item nav-link">Home</NavLink>
             @if (ShowMenuSobre)
             {
-                <NavLink href="/about" class="nav-item nav-link" style="display: @ShowMenuSobre;" hidden="@ShowMenuSobre">Sobre</NavLink>
+                <NavLink href="/about" class="nav-item nav-link" hidden="@ShowMenuSobre">Sobre</NavLink>
             }
             @if (ShowMenuServicos)
             {
-                <NavLink href="#services" class="nav-item nav-link" style="display: @ShowMenuServicos;">Serviços</NavLink>
+                <NavLink href="#services" class="nav-item nav-link">Serviços</NavLink>
             }
             @if (ShowMenuPacotes)
             {
-                <NavLink href="/packages" class="nav-item nav-link" style="display: @ShowMenuPacotes;">Pacotes</NavLink>
+                <NavLink href="/packages" class="nav-item nav-link">Pacotes</NavLink>
             }
             @if (ShowMenuContactos)
             {
-                <NavLink href="#contacts" class="nav-item nav-link" style="display: @ShowMenuContactos;">Contactos</NavLink>
+                <NavLink href="#contacts" class="nav-item nav-link">Contactos</NavLink>
             }
         </div>
         @if (IsLoggedIn)
@@ -35,9 +38,12 @@
                 <a href="login" class="d-flex  text-lg-center justify-content-center align-items-center rounded-pill">
                     <i style="font-size: 30px" class="bi bi-person-circle"></i>
                 </a>
-                <a href="login" class="d-flex  text-lg-center justify-content-center align-items-center rounded-pill">
-                    <i class="bi bi-cart-fill" style="font-size: 30px"></i>
-                </a>
+                @if (IsClient)
+                {
+                    <a @onclick='() => { JS.InvokeVoidAsync("openModal", "cartModal"); }' class="d-flex  text-lg-center justify-content-center align-items-center rounded-pill">
+                        <i class="bi bi-cart-fill" style="font-size: 30px"></i>
+                    </a>
+                }
             </div>
         }
         else
@@ -49,11 +55,17 @@
     </div>
 </nav>
 
+@if (ClientId != Guid.Empty && IsClient)
+{
+    <CartModal ClientId="ClientId"></CartModal>
+}
+
 @code
 {
     [Parameter] public bool IsLoggedIn { get; set; }
+    [Parameter] public bool IsClient { get; set; } = false;
     [Parameter] public string PageType { get; set; } = "";
-
+    public Guid ClientId { get; set; }
 
     public bool ShowMenuSobre => PageType == "package" || PageType == "about" ? false : true;
 
@@ -63,7 +75,24 @@
 
     public bool ShowMenuContactos => PageType == "package" || PageType == "about" ? false : true;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        var currentUser = await LocalStorage.GetItemAsync("currentUser");
+        if (currentUser is null)
+        {
+            return;
+        }
+
+        var CurrentUser = JsonSerializer.Deserialize<LoginListUserDto>(currentUser) ?? new LoginListUserDto();
+
+        ClientId = CurrentUser.UserTypeId;
+        Console.WriteLine("ID passado => " + CurrentUser.UserTypeId);
+
+        if (IsClient)
+        {
+            if (!(await carts.CartExists(ClientId)))
+                carts.RegisterCart(ClientId);
+        }
+        StateHasChanged();
     }
 }

@@ -7,6 +7,7 @@ public class CreatePackageDto
     public string Name { get; set; }
     public string Description { get; set; }
     public PackageType Type { get; set; }
+    public decimal PackageBasePrice { get; set; }
 
     public List<Guid> ActivityIds { get; set; } = [];
 }

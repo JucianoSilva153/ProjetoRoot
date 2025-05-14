@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
     <PropertyGroup>
+        <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -12,7 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Root.Application\Root.Application.csproj" />
+        <ProjectReference Include="..\Root.Application\Root.Application.csproj"/>
+        <ProjectReference Include="..\Root.Common\Root.Common.csproj" />
     </ItemGroup>
 
 </Project>

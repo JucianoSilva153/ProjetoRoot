@@ -1,0 +1,56 @@
+@using Root.Application.DTOs.PackageDtos
+<div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Pacote - @Package.Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-start">
+                <div class="mb-5">
+                    <strong>
+                        <p>@Package.Description</p>
+                    </strong>
+                </div>
+                <div class="mb-3 card">
+                    <div class="card-header">
+                        Atividades Incluindas
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var act in Package.ActivityNames)
+                        {
+                            <li class="list-group-item d-flex align-items-center justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">@act</div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <div class="mb-3 card-group justify-content-center">
+                    <div class="card text-primary mb-3 border-primary" style="max-width: 18rem;">
+                        <div class="card-body flex-column d-flex justify-content-center align-items-center">
+                            <i class="bi bi-hourglass-bottom me-2" style="font-size: 30px"></i>
+                            <span>-- Horas</span>
+                        </div>
+                    </div>
+                    <div class="card text-primary mb-3 border-primary" style="max-width: 18rem;">
+                        <div class="card-body flex-column d-flex justify-content-center align-items-center">
+                            <i class="bi bi-pin-angle-fill text-primary me-2" style="font-size: 30px"></i>
+                            <span>@Package.ActivityNames.Count Atividade(s)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Ir para agendamento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ListPackageDto Package { get; set; } = new();
+    public string ModalId => $"viewPackModal_{Package.Id}";
+}

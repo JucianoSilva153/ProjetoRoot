@@ -7,6 +7,7 @@ public class Package : Entity
     public string Name { get; set; }
     public string Description { get; set; }
     public PackageType Type { get; set; }
+    public decimal BasePrice { get; set; }
 
     public ICollection<Activity> Activities { get; set; }
 }

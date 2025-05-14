@@ -1,0 +1,59 @@
+@using Root.Application.DTOs.PaymentDtos
+@using Root.Application.DTOs.ReserveDtos
+@using Root.Domain.Enums
+<div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Pagamento - @Reserve.PackageName</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-start">
+                <div>
+                    <h5 class="text-center">Está prestes a fazer o pagamento com valor total de <span class="text-primary">'@Reserve.TotalPrice.ToString("C")'</span>!</h5>
+                    <h6 class="text-center">Por favor, selecione abaixo o metodo de pagamento!</h6>
+                </div>
+                <div class="my-4 gap-2">
+                    <select @bind="NewPayment.PaymentMethod" class="form-control">
+                        <option value="@PaymentMethod.Express">@PaymentMethod.Express.ToFriendlyString()</option>
+                        <option value="@PaymentMethod.Reference">@PaymentMethod.Reference.ToFriendlyString()</option>
+                        <option value="@PaymentMethod.PayPay">@PaymentMethod.PayPay.ToFriendlyString()</option>
+                        <option value="@PaymentMethod.Transference">@PaymentMethod.Transference.ToFriendlyString()</option>
+                    </select>
+                </div>
+                <small class="text-danger">@erro</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="PayReserve">Efetuar Pagamento</button>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter] public ListReserveDto Reserve { get; set; } = new();
+    [Parameter] public Action OnPaymentDone { get; set; }
+    public string ModalId => $"payReserveModal_{Reserve.Id}";
+
+    public CreatePaymentDto NewPayment { get; set; } = new();
+    public string erro { get; set; } = "";
+
+
+    private async void PayReserve()
+    {
+        NewPayment.ReserveId = Reserve.Id;
+        NewPayment.PaymentValue = Reserve.TotalPrice;
+        
+        var result = await payments.CreateNewPaymentAsync(NewPayment);
+        if (!result)
+        {
+            erro = "Ocorreu um erro fazer o pagamento! Por favor tente mais tarde ou entre contacto com o apoio ao cliente!!";
+            StateHasChanged();
+            return;
+        }
+
+        OnPaymentDone.Invoke();
+        await JS.InvokeVoidAsync("closeModal", ModalId);
+    }
+
+}

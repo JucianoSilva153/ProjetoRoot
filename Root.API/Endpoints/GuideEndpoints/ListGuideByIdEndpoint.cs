@@ -21,9 +21,3 @@ public class ListGuideByIdEndpoint(GuideService guideService) : EndpointWithoutR
     }
 }
 
-
-public class GuideIdRequest
-{
-    public Guid GuideId { get; set; }
-}
-

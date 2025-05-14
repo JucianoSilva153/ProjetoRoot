@@ -4,7 +4,7 @@ using Root.Application.Services;
 
 namespace Root.API.Endpoints.PackageEndpoints;
 
-public class ListPackageByIdEndpoint(PackageService packageService) : Endpoint<Guid, ListPackageDto?>
+public class ListPackageByIdEndpoint(PackageService packageService) : EndpointWithoutRequest<ListPackageDto?>
 {
     public override void Configure()
     {
@@ -13,8 +13,10 @@ public class ListPackageByIdEndpoint(PackageService packageService) : Endpoint<G
         AllowAnonymous();
     }
 
-    public override async Task<ListPackageDto?> ExecuteAsync(Guid packageId, CancellationToken ct)
+    public override async Task<ListPackageDto?> ExecuteAsync( CancellationToken ct)
     {
-        return await packageService.GetPackageByIdAsync(packageId);
+        var packIdStr = Route<string>("packageId");
+        var packId = Guid.Parse(packIdStr);
+        return await packageService.GetPackageByIdAsync(packId);
     }
 }

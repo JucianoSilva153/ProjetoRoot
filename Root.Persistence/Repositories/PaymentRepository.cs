@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities;
+using Root.Domain.Enums;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
 
@@ -12,9 +13,18 @@ public class PaymentRepository(RootDbContext dbContext) : IPaymentRepository
     public async Task<bool> CreateAsync(Payment entity)
     {
         await _dbContext.Payments.AddAsync(entity);
+
+        var reserve = await _dbContext.Reserves.FirstOrDefaultAsync(r => r.Id == entity.ReserveId);
+        if (reserve is null)
+            return false;
+
+        reserve.Status = ReserveStatus.Confirmed;
+        _dbContext.Update(reserve);  
+        
         var entriesCount = await _dbContext.SaveChangesAsync();
         if (entriesCount > 0)
             return true;
+
         return false;
     }
 
@@ -25,7 +35,10 @@ public class PaymentRepository(RootDbContext dbContext) : IPaymentRepository
 
     public async Task<IEnumerable<Payment>> GetAllAsync()
     {
-        return await _dbContext.Payments.ToListAsync();
+        return await _dbContext.Payments
+            .Include(p => p.Reserve)
+            .ThenInclude(r => r.Client)
+            .ToListAsync();
     }
 
     public async Task<bool> UpdateAsync(Payment entity)

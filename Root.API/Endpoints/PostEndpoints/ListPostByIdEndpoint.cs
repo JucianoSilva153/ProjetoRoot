@@ -4,7 +4,7 @@ using Root.Application.Services;
 
 namespace Root.API.Endpoints.PostEndpoints;
 
-public class ListPostByIdEndpoint(PostService postService) : Endpoint<Guid, ListPostDto?>
+public class ListPostByIdEndpoint(PostService postService) : EndpointWithoutRequest<ListPostDto?>
 {
     public override void Configure()
     {
@@ -13,8 +13,10 @@ public class ListPostByIdEndpoint(PostService postService) : Endpoint<Guid, List
         AllowAnonymous();
     }
 
-    public override async Task<ListPostDto?> ExecuteAsync(Guid postId, CancellationToken ct)
+    public override async Task<ListPostDto?> ExecuteAsync(CancellationToken ct)
     {
+        var postIdStr = Route<string>("postId");
+        var postId = Guid.Parse(postIdStr);
         return await postService.GetPostByIdAsync(postId);
     }
 }

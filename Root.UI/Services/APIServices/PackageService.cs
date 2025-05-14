@@ -74,6 +74,21 @@ public class PackageService(HttpClient client, LocalStorageService localStorageS
         return false;
     }
     
+    public async Task<ListPackageDto?> GetPackageByIdAsync(Guid packId)
+    {
+        try
+        {
+            var result = await client.GetFromJsonAsync<ListPackageDto?>($"/packages/{packId}");
+            return result;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Erro ao procurar pacote => " + e);
+        }
+
+        return null;
+    }
+    
     private async Task SetAuthorizationHeaderAsync()
     {
         var json = await localStorageService.GetItemAsync("currentUser");

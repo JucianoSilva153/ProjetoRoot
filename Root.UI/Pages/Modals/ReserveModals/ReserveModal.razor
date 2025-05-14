@@ -1,0 +1,68 @@
+@using Root.Application.DTOs.PackageDtos
+@using Root.Application.DTOs.ReserveDtos
+@using Root.Application.DTOs.UserDtos
+<div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agendamento - @Package.Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-start">
+                <div>
+                    <h5 class="text-center">Está prestes a fazer um agendamento para o pacote <span class="text-primary">'@Package.Name'</span>, no valor de <span class="text-primary">@Package.ActivitiesPackagePrice.ToString("C")</span>!</h5>
+                    <h6 class="text-center">Por favor, insira abaixo o número de participantes do pacote de turismo, e data de marcação!</h6>
+                </div>
+                <div class="my-4 gap-2">
+                    <input @bind="NewReserve.PeopleCount" type="number" placeholder="Numero de pessoas" class="form-control"/>
+                    <input @bind="NewReserve.ReserveDate" type="date" placeholder="Data" class="form-control"/>
+                </div>
+                <div>
+                    <small>Depois de se confirmar o agendamento, será redirecionado para sua conta e poderá verificar mais detalhes sobre o pagamento!!</small>
+                </div>
+                <small class="text-danger">@erro</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="BookPackage">Agendar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ListPackageDto Package { get; set; } = new();
+    [Parameter] public Guid? ClientId { get; set; }
+
+    [CascadingParameter] public LoginListUserDto CurrentUser { get; set; } = new();
+    public string ModalId => $"bookPackModal_{Package.Id}";
+    public CreateReserveDto NewReserve { get; set; } = new();
+    public string erro { get; set; } = "";
+
+    public async void BookPackage()
+    {
+        if (NewReserve.PeopleCount == 0)
+        {
+            erro = "Por favor, insira o numero de pessoas que participarao do pacote!";
+            StateHasChanged();
+            return;
+        }
+
+        NewReserve.PackageId = Package.Id;
+        NewReserve.ClientId = CurrentUser.UserTypeId == Guid.Empty ? ClientId!.Value : CurrentUser.UserTypeId;
+        NewReserve.TotalPrice = Package.PackageBasePrice + Package.ActivitiesPackagePrice;
+
+        var result = await reserves.CreateNewReserveAsync(NewReserve);
+        if (!result)
+        {
+            erro = "Ocorreu um erro fazer agendamente! Por favor tente mais tarde ou entre contacto com o apoio ao cliente!!";
+            StateHasChanged();
+            return;
+        }
+
+        await JS.InvokeVoidAsync("closeModal", ModalId);
+        Navigator.NavigateTo("dashboard/reserves");
+    }
+    
+}

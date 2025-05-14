@@ -1,0 +1,115 @@
+@using Root.Application.DTOs.PackageDtos
+@using Root.Application.DTOs.UserDtos
+@using Root.Common.Abstractions
+<div class="modal fade" id="cartModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen modal-lg">
+        <div class="modal-content h-100">
+            <div class="modal-header">
+                <h5 class="modal-title">Meu Carrinho</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body h-100">
+                <div class="row h-100">
+                    <!-- Lista de Itens -->
+                    <div class="col-12 col-md-8 p-3 rounded shadow-sm h-100 d-flex flex-column overflow-auto">
+                        @foreach (var item in Items)
+                        {
+                            <div class="@GetItemClass(item.Id)"
+                                 @onclick="() => SelectItem(item.Id)">
+                                <div>
+                                    <h5>@item.Name</h5>
+                                    <small>
+                                        <p>@item.Description</p>
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Resumo -->
+                    <div class="col-12 col-md-4 text-white p-3 rounded shadow-sm h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <h4>Resumo</h4>
+                            <h6>Preço base: <span class="text-secondary">@BasePrice().ToString("C")</span></h6>
+                            <h6>Preço Atividades: <span class="text-secondary">@ActivitiesPrice().ToString("C")</span></h6>
+                        </div>
+                        <div>
+                            <h4>Total: <span class="text-secondary">@CurrentTotal.ToString("C")</span></h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-none d-md-flex">
+                <button type="button" class="btn btn-primary" @onclick="BookPackage">Agendar Selecionado</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (SelectedItemId != null)
+{
+    <ReserveModal Package="Items.First(i => i.Id == SelectedItemId)" ClientId="ClientId"></ReserveModal>
+}
+
+
+@code
+{
+    [Parameter] public Guid ClientId { get; set; }
+    public Cart CurrentUserCart { get; set; } = new();
+    public List<ListPackageDto> Items { get; set; } = [];
+    private Guid? SelectedItemId { get; set; }
+
+    public decimal BasePrice()
+    {
+        var currentItem = Items.FirstOrDefault(i => i.Id == SelectedItemId);
+        if (currentItem is null)
+            return 0;
+        return currentItem.PackageBasePrice;
+    }
+
+    public decimal ActivitiesPrice()
+    {
+        var currentItem = Items.FirstOrDefault(i => i.Id == SelectedItemId);
+        if (currentItem is null)
+            return 0;
+        return currentItem.ActivitiesPackagePrice;
+    }
+
+    public decimal CurrentTotal => BasePrice() + ActivitiesPrice();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ClientId != Guid.Empty)
+        {
+            CurrentUserCart = await carts.GetCart(ClientId) ?? new();
+            Items = await carts.ListItemsAsync(CurrentUserCart.Items);
+        }
+    }
+
+
+    private void SelectItem(Guid id)
+    {
+        if (SelectedItemId == id)
+            SelectedItemId = null; // Desmarca se clicar novamente
+        else
+            SelectedItemId = id;
+    }
+
+    private string GetItemClass(Guid id)
+    {
+        var baseClass = "border my-2 border-2 p-2 rounded rounded-3 d-flex justify-content-between cursor-pointer";
+        var highlightClass = "border-primary bg-primary-subtle";
+        var normalClass = "bg-light";
+
+        return SelectedItemId == id ? $"{baseClass} {highlightClass}" : $"{baseClass} {normalClass}";
+    }
+
+    private async Task BookPackage()
+    {
+        if (SelectedItemId is not null)
+        {
+            await JS.InvokeVoidAsync("closeModal", "cartModal");
+            await JS.InvokeVoidAsync("openModal", $"bookPackModal_{SelectedItemId}");
+        }
+    }
+}

@@ -21,8 +21,3 @@ public class ListAdministratorByIdEndpoint(AdministratorService administratorSer
         return await administratorService.GetAdministratorByIdAsync(adminId);
     }
 }
-
-public class AdminIdRequest
-{
-    public Guid GuideId { get; set; }
-}

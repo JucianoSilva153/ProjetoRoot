@@ -1,10 +1,12 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Root.Application.DTOs.PaymentDtos;
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
 
 namespace Root.Application.Services;
 
-public class PaymentService(IPaymentRepository paymentRepository)
+public class PaymentService(IPaymentRepository paymentRepository, IHttpContextAccessor contextAccessor)
 {
     public async Task<bool> CreatePaymentAsync(CreatePaymentDto dto)
     {
@@ -27,11 +29,26 @@ public class PaymentService(IPaymentRepository paymentRepository)
         return false;
     }
 
+    public Guid? GetCurrentUserId()
+    {
+        var currentUser = contextAccessor.HttpContext?.User;
+        var userStringId = currentUser?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        return Guid.Parse(userStringId!);
+    }
+    
     public async Task<List<ListPaymentDto>> ListAllPaymentsAsync()
     {
         try
         {
+            var userId = GetCurrentUserId();
+
+            if (userId is null)
+                return [];
+            
             var payments = await paymentRepository.GetAllAsync();
+            payments = payments.Where(p => p.Reserve.Client.UserId == userId);
+            
             return payments.Select(p => new ListPaymentDto
             {
                 Id = p.Id,

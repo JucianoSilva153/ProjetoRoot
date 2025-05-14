@@ -4,7 +4,7 @@ using Root.Application.Services;
 
 namespace Root.API.Endpoints.ReserveEndpoints;
 
-public class ListReserveByIdEndpoint(ReserveService reserveService) : Endpoint<Guid, ListReserveDto>
+public class ListReserveByIdEndpoint(ReserveService reserveService) : EndpointWithoutRequest<ListReserveDto>
 {
     public override void Configure()
     {
@@ -13,8 +13,10 @@ public class ListReserveByIdEndpoint(ReserveService reserveService) : Endpoint<G
         AllowAnonymous();
     }
 
-    public override async Task<ListReserveDto?> ExecuteAsync(Guid reserveId, CancellationToken ct)
+    public override async Task<ListReserveDto?> ExecuteAsync(CancellationToken ct)
     {
+        var reserveIdStr = Route<string>("reserveId");
+        var reserveId = Guid.Parse(reserveIdStr);
         return await reserveService.GetReserveByIdAsync(reserveId);
     }
 }

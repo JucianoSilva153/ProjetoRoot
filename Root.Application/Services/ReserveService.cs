@@ -14,7 +14,9 @@ public class ReserveService(IReserveRepository reserveRepository)
             {
                 ClientId = dto.ClientId,
                 PackageId = dto.PackageId,
-                PeopleCount = dto.PeopleCount
+                PeopleCount = dto.PeopleCount,
+                Date = dto.ReserveDate,
+                TotalPrice = dto.TotalPrice
             };
 
             return await reserveRepository.CreateAsync(reserve);
@@ -39,7 +41,11 @@ public class ReserveService(IReserveRepository reserveRepository)
                 ClientId = r.ClientId,
                 PackageId = r.PackageId,
                 PeopleCount = r.PeopleCount,
-                TotalPrice = r.TotalPrice
+                TotalPrice = r.TotalPrice,
+                ClientName = r.Client.Name,
+                ReserveStatus = r.Status,
+                PackageName = r.Package.Name,
+                ReserveDate = r.Date,
             }).ToList();
         }
         catch (Exception ex)
@@ -64,7 +70,9 @@ public class ReserveService(IReserveRepository reserveRepository)
                 ClientId = reserve.ClientId,
                 PackageId = reserve.PackageId,
                 PeopleCount = reserve.PeopleCount,
-                TotalPrice = reserve.TotalPrice
+                TotalPrice = reserve.TotalPrice,
+                ReserveStatus = reserve.Status,
+                ReserveDate = reserve.Date
             };
         }
         catch (Exception ex)
@@ -84,6 +92,8 @@ public class ReserveService(IReserveRepository reserveRepository)
                 return false;
 
             reserve.PeopleCount = dto.PeopleCount ?? reserve.PeopleCount;
+            reserve.Date = dto.ReserveDate ?? reserve.Date;
+            reserve.Status = dto.ReserveStatus ?? reserve.Status;
 
             return await reserveRepository.UpdateAsync(reserve);
         }

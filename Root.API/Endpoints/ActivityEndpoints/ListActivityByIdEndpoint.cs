@@ -4,7 +4,7 @@ using Root.Application.Services;
 
 namespace Root.API.Endpoints.ActivityEndpoints;
 
-public class ListActivityByIdEndpoint(ActivityService activityService) : Endpoint<Guid, ListActivityDto?>
+public class ListActivityByIdEndpoint(ActivityService activityService) : EndpointWithoutRequest<ListActivityDto?>
 {
     public override void Configure()
     {
@@ -13,8 +13,10 @@ public class ListActivityByIdEndpoint(ActivityService activityService) : Endpoin
         AllowAnonymous();
     }
 
-    public override async Task<ListActivityDto?> ExecuteAsync(Guid activityId, CancellationToken ct)
+    public override async Task<ListActivityDto?> ExecuteAsync(CancellationToken ct)
     {
+        var activityIdStr = Route<string>("activityId");
+        var activityId = Guid.Parse(activityIdStr);
         return await activityService.ListActivityByIdAsync(activityId);
     }
 }

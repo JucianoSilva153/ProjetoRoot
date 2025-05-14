@@ -1,0 +1,50 @@
+@layout DashboardLayout
+@page "/dashboard/payments"
+@using Root.Application.DTOs.PaymentDtos
+@using Root.Domain.Enums
+
+<div class="d-flex w-100 flex-row align-content-between">
+    <div class="w-75">
+        <h3>Meus Pagamentos</h3>
+        <small>Gestao de pagamento de reserva</small>
+    </div>
+    <div class="d-flex justify-content-end align-items-center w-25">
+        <button class="btn btn-primary rounded-pill">
+            <i class="bi bi-plus-circle"></i>
+            <span>Ver Reservas</span>
+        </button>
+    </div>
+</div>
+
+<table class="table table-striped table-hover">
+    <thead>
+    <tr>
+        <th scope="col">Metodo de Pagamento</th>
+        <th scope="col">Valor Pago</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var reserve in ListPayment)
+    {
+    <tr>
+        <td>@reserve.PaymentMethod.ToFriendlyString()</td>
+        <td>@reserve.PaymentValue.ToString("C")</td>
+        <td>
+            <button class="btn btn-primary rounded-pill">
+                <i class="bi bi-eye-fill"></i>
+            </button>
+        </td>
+    </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    public List<ListPaymentDto> ListPayment { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListPayment = await payments.GetAllPaymentsAsync();
+    }
+
+}
