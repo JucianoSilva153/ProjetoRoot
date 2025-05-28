@@ -1,10 +1,10 @@
 @using Root.Application.DTOs.ActivityDto
 @using Root.Application.DTOs.PackageDtos
-<div class="modal fade" id="newPackageModal" data-bs-backdrop="static" tabindex="-1">
+<div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Novo Pacote</h5>
+                <h5 class="modal-title">Editar Pacote</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -35,7 +35,7 @@
                         </button>
                     </div>
                     <ol class="list-group list-group-numbered">
-                        @foreach (var act in ListActivitiesToAdd)
+                        @foreach (var act in NewListActivities)
                         {
                             <li class="list-group-item d-flex align-items-center justify-content-between align-items-start">
                                 <div class="ms-2 me-auto">
@@ -53,7 +53,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" @onclick="CreateNewPackage">Salvar</button>
+                <button type="button" class="btn btn-primary" @onclick="UpdateNewPackage">Salvar</button>
             </div>
         </div>
     </div>
@@ -61,52 +61,83 @@
 
 @code
 {
-    [Parameter] public Action OnPackageCreated { get; set; }
-    public CreatePackageDto NewPackage { get; set; } = new();
+    [Parameter] public ListPackageDto Package { get; set; }
+    [Parameter] public Action OnPackageUpdated { get; set; }
+    public ListPackageDto NewPackage { get; set; } = new();
+    public ListPackageDto OldPackage { get; set; } = new();
     public string erro { get; set; } = "";
 
     public List<ListActivityDto> ListActivities { get; set; } = [];
-    public List<ListActivityDto> ListActivitiesToAdd { get; set; } = [];
+    public List<ListActivityDto> OldListActivities { get; set; } = [];
+    public List<ListActivityDto> NewListActivities { get; set; } = [];
     public Guid CurrentActivityId { get; set; }
+
+    public string ModalId => $"editPackageModal_{Package.Id}";
 
     protected override async Task OnInitializedAsync()
     {
+        NewPackage = Package;
+        OldPackage = new ListPackageDto
+        {
+            Id = NewPackage.Id,
+            Description = NewPackage.Description,
+            Type = NewPackage.Type,
+            PackageBasePrice = NewPackage.PackageBasePrice,
+            ActivityNames = NewPackage.ActivityNames.ToList(),
+            ActivitiesPackagePrice = NewPackage.ActivitiesPackagePrice,
+            Name = NewPackage.Name,
+            Duration = NewPackage.Duration
+        };
+        
         ListActivities = await activities.GetAllActivitiesAsync();
+        foreach (var act in OldPackage.ActivityNames)
+        {
+            var activity = ListActivities.FirstOrDefault(l => l.Name == act);
+            if(activity is not null)
+                OldListActivities.Add(activity);
+        }
+
+        NewListActivities = OldListActivities.ToList();
     }
 
     public void AddActivity()
     {
         var currentAct = ListActivities.First(c => c.Id == CurrentActivityId);
-        if (!ListActivitiesToAdd.Contains(currentAct))
-            ListActivitiesToAdd.Add(currentAct);
+        if (!NewListActivities.Contains(currentAct))
+            NewListActivities.Add(currentAct);
         StateHasChanged();
     }
     
     public void RemoveActivity(Guid actId)
     {
         var currentAct = ListActivities.First(c => c.Id == actId);
-        if (ListActivitiesToAdd.Contains(currentAct))
-            ListActivitiesToAdd.Remove(currentAct);
+        if (NewListActivities.Contains(currentAct))
+            NewListActivities.Remove(currentAct);
         StateHasChanged();
     }
 
-    public async void CreateNewPackage()
+    public async void UpdateNewPackage()
     {
         if (string.IsNullOrEmpty(NewPackage.Name)
             || string.IsNullOrEmpty(NewPackage.Description)
-            || !(ListActivitiesToAdd.Count > 0))
+            || !(NewListActivities.Count > 0))
         {
             erro = "Por favor preencha todos campos!!";
             StateHasChanged();
             return;
         }
-        
-        ListActivitiesToAdd.ForEach(act =>
-        {
-            NewPackage.ActivityIds.Add(act.Id);
-        });
 
-        var result = await packages.CreateNewPackageAsync(NewPackage);
+        var updatedPackage = new UpdatePackageDto
+        {
+            Id = NewPackage.Id,
+            Description = NewPackage.Description == OldPackage.Description ? null : NewPackage.Description,
+            PackageBasePrice = NewPackage.PackageBasePrice == OldPackage.PackageBasePrice ? null : NewPackage.PackageBasePrice,
+            Name = NewPackage.Name == OldPackage.Name ? null : NewPackage.Name,
+            Type = NewPackage.Type == OldPackage.Type ? null : NewPackage.Type,
+            ActivityIds = NewListActivities == OldListActivities ? null : NewListActivities.Select(l => l.Id) as List<Guid>
+        };
+        
+        var result = await packages.UpdatePackageAsync(updatedPackage);
         if (!result)
         {
             erro = "Ocorreu um erro ao tentar criar o pacote!!";
@@ -115,7 +146,7 @@
         }
         
         StateHasChanged();
-        OnPackageCreated.Invoke();
-        await JS.InvokeVoidAsync("closeModal", "newPackageModal");
+        OnPackageUpdated.Invoke();
+        await JS.InvokeVoidAsync("closeModal", ModalId);
     }
 }

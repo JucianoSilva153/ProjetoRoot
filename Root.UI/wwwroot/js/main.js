@@ -101,4 +101,11 @@ function closeModal(id) {
     myModal.hide();
 }
 
+window.checkQuillLoaded = () => {
+    return !!window.Quill;
+};
 
+window.getEditorContent = (id) => {
+    var element = document.getElementsByClassName(id);
+    return element[0].innerHTML;
+}

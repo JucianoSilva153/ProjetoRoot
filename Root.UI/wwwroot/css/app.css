@@ -208,3 +208,26 @@ code {
     height: 100%;
     object-fit: cover; /* garante que a imagem preencha bem o círculo */
 }
+
+.team-item {
+    height: 100%; /* Garante que o card use toda a altura da coluna */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.team-item .overflow-hidden {
+    height: 250px; /* altura fixa da imagem */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f8f8;
+}
+
+.team-item img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}

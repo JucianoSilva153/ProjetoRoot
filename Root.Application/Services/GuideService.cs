@@ -44,7 +44,8 @@ public class GuideService(IGuideRepository guideRepository)
                 Idioms = guide.Idioms,
                 Description = guide.Description,
                 Location = guide.Location,
-                UserId = guide.UserId
+                UserId = guide.UserId,
+                Image = guide.Image
             }).ToList();
         }
         catch (Exception ex)

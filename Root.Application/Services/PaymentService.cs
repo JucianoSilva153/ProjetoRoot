@@ -46,6 +46,8 @@ public class PaymentService(IPaymentRepository paymentRepository, IHttpContextAc
             if (userId is null)
                 return [];
             
+            
+            
             var payments = await paymentRepository.GetAllAsync();
             payments = payments.Where(p => p.Reserve.Client.UserId == userId);
             

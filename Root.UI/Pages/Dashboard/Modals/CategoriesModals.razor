@@ -1,0 +1,76 @@
+@using Root.Application.DTOs.ActivityDto
+@using Root.Application.DTOs.CategoryDtos
+@using Root.Domain.Enums
+<div class="modal fade" id="categoriesModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Categorias</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input @oninput='() => { erro = ""; }' @bind="NewCategory.Title" type="text" class="form-control" id="nome" placeholder="Nome da categoria">
+                    </div>
+                    <div class="d-flex gap-2 w-100">
+                        <div class="mb-3 w-auto">
+                            <label for="disponiveis" class="form-label">Categorias Disponiveis</label>
+                            <select @oninput='() => { erro = ""; }' class="form-select" id="disponiveis">
+                                @foreach (var cat in Categories)
+                                {
+                                    <option>@cat.Title</option>
+                                }
+                                @if (Categories.Count() == 0)
+                                {
+                                    <option>Sem Categorias</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <small class="text-danger">@erro</small>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="CreateNewCategory">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    public string erro { get; set; } = "";
+    public CreateCategoryDto NewCategory { get; set; } = new();
+    public List<ListCategoryDto> Categories { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categories = await posts.GetAllCategoriesAsync();
+        StateHasChanged();
+    }
+
+    private async void CreateNewCategory()
+    {
+        if (string.IsNullOrEmpty(NewCategory.Title))
+        {
+            erro = "Por favor, insira a categoria!!";
+            StateHasChanged();
+            return;
+        }
+        
+        var result = await posts.CreateNewCategoryAsync(NewCategory);
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar criar uma nova categoria!!";
+            StateHasChanged();
+            return;
+        }
+        
+        StateHasChanged();
+        await OnInitializedAsync();
+    }
+
+}

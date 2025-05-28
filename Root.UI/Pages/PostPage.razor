@@ -1,0 +1,16 @@
+@page "/blog/{StringPosId}"
+@layout PostPageLayout
+
+<div class="container">
+    @Content
+</div>
+@code {
+    
+    [Parameter] public string StringPosId{ get; set; } = String.Empty;
+    [CascadingParameter] public MarkupString Content { get; set; }
+    
+    protected override void OnParametersSet()
+    {
+        RouteService.Parametro = StringPosId;
+    }
+}

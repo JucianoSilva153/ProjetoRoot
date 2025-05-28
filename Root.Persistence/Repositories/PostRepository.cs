@@ -20,12 +20,12 @@ public class PostRepository(RootDbContext dbContext) : IPostRepository
 
     public async Task<Post?> GetByIdAsync(Guid id)
     {
-        return await _dbContext.Posts.FirstOrDefaultAsync(post => post.Id == id);
+        return await _dbContext.Posts.Include(p => p.Categories).FirstOrDefaultAsync(post => post.Id == id);
     }
 
     public async Task<IEnumerable<Post>> GetAllAsync()
     {
-        return await _dbContext.Posts.ToListAsync();
+        return await _dbContext.Posts.Include(p => p.Categories).ToListAsync();
     }
 
     public async Task<bool> UpdateAsync(Post entity)

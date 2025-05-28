@@ -1,7 +1,50 @@
 @layout DashboardLayout
 @page "/dashboard/clients"
-<h3>Clients</h3>
+@using Root.Application.DTOs.ClientDtos
+@using Root.Application.DTOs.ReserveDtos
+@using Root.Domain.Enums
+<div class="d-flex w-100 flex-row align-content-between">
+    <div class="w-75">
+        <h3>Usuarios</h3>
+        <small>Usuarios cadastrados no sistema</small>
+    </div>
+</div>
+
+<table class="table table-striped table-hover">
+    <thead>
+    <tr>
+        <th scope="col">Cliente</th>
+        <th scope="col">Nacionalide</th>
+        <th scope="col">Reservas (Pagas)</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var client in ListClient)
+    {
+        <tr>
+            <td>@client.Name @client.Surname</td>
+            <td>@client.Nationality</td>
+            <td>@ClientReserves(client.Id) (@ClientPaidReserves(client.Id))</td>
+        </tr>
+    }
+    </tbody>
+</table>
 
 @code {
-    
+    public List<ListClientsDto> ListClient { get; set; } = [];
+    public List<ListReserveDto> ListReserves { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListClient = await clients.GetAllClientsAsync();
+        ListReserves = await reserves.GetAllReservesAsync();
+    }
+
+    public int ClientReserves(Guid id) =>
+        ListReserves.Where(l => l.ClientId == id).Count();
+
+    public int ClientPaidReserves(Guid id) =>
+        ListReserves.Where(l => l.ClientId == id && l.ReserveStatus == ReserveStatus.Confirmed).Count();
+
+
 }

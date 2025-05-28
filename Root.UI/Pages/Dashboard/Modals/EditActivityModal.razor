@@ -1,0 +1,112 @@
+@using Root.Application.DTOs.ActivityDto
+@using Root.Domain.Enums
+<div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Atividade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input @oninput='() => { erro = ""; }' @bind="Activity.Name" type="text" class="form-control" id="nome" placeholder="Nome da atividade">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descricao</label>
+                        <textarea @oninput='() => { erro = ""; }' @bind="Activity.Description" class="form-control" id="descricao" rows="3"></textarea>
+                    </div>
+                    <div class="d-flex gap-2 w-100">
+                        <div class="mb-3 w-auto">
+                            <label for="duracao" class="form-label">Duracao (em horas)</label>
+                            <input @oninput='() => { erro = ""; }' @bind="Activity.DurationTime" class="form-control" type="number" id="duracao" placeholder="Duracao da Atividade em horas">
+                        </div>
+                        <div class="mb-3 w-auto">
+                            <label for="preco" class="form-label">Preco</label>
+                            <input @oninput='() => { erro = ""; }' @bind="Activity.Price" class="form-control" type="number" id="preco" placeholder="Preco da Actividade">
+                        </div>
+                        <div class="mb-3 w-auto">
+                            <label @bind="Activity.Type" for="tipo" class="form-label">Tipo de atividade</label>
+                            <select @oninput='() => { erro = ""; }' class="form-select" id="tipo" aria-label="Tipo de Atividade">
+                                <option value="@ActivityType.None" selected="">Tipo de Atividade</option>
+                                <option value="@ActivityType.Adventure">@ActivityType.Adventure.ToFriendlyString()</option>
+                                <option value="@ActivityType.Cultural">@ActivityType.Cultural.ToFriendlyString()</option>
+                                <option value="@ActivityType.Nature">@ActivityType.Nature.ToFriendlyString()</option>
+                                <option value="@ActivityType.Recreational">@ActivityType.Recreational.ToFriendlyString()</option>
+                            </select>
+                        </div>
+                    </div>
+                    <small class="text-danger">@erro</small>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="EditActivity">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter] public ListActivityDto Activity { get; set; }
+    [Parameter] public Action OnActivityCreated { get; set; }
+
+    public ListActivityDto NewActivity { get; set; } = new();
+    public ListActivityDto OldActivity { get; set; } = new();
+
+    public string erro { get; set; } = "";
+    public string ModalId => $"editActivityModal_{Activity.Id}";
+
+
+    protected override void OnInitialized()
+    {
+        NewActivity = Activity;
+        OldActivity = new ListActivityDto
+        {
+            Description = Activity.Description,
+            Type = Activity.Type,
+            Name = Activity.Name,
+            Price = Activity.Price,
+            Id = Activity.Id,
+            DurationTime = Activity.DurationTime,
+        };
+    }
+
+    public async void EditActivity()
+    {
+        if (string.IsNullOrEmpty(NewActivity.Name)
+            || string.IsNullOrEmpty(NewActivity.Description)
+            || !(NewActivity.Price > 0)
+            || NewActivity.Type == ActivityType.None)
+        {
+            erro = "Por favor, preencha todos os campos!!";
+            StateHasChanged();
+            return;
+        }
+
+        var activityToUpdate = new UpdateActivityDto
+        {
+            DurationTime = NewActivity.DurationTime == OldActivity.DurationTime ? null : NewActivity.DurationTime,
+            Description = NewActivity.Description == OldActivity.Description ? null : NewActivity.Description,
+            Type = NewActivity.Type == OldActivity.Type ? null : NewActivity.Type,
+            Name = NewActivity.Name == OldActivity.Name ? null : NewActivity.Name,
+            Price = NewActivity.Price == OldActivity.Price ? null : NewActivity.Price,
+            Id = Activity.Id
+        };
+
+        var result = await activities.UpdateActivityAsync(activityToUpdate);
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar criar uma nova atividade!!";
+            StateHasChanged();
+            return;
+        }
+
+        StateHasChanged();
+        OnActivityCreated.Invoke();
+        await JS.InvokeVoidAsync("closeModal", ModalId);
+    }
+
+}

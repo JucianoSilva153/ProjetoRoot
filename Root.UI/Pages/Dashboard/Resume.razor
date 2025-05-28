@@ -1,6 +1,115 @@
 @layout DashboardLayout
 @page "/dashboard"
-<h1>Resumo</h1>
+@using Root.Application.DTOs.AdminDtos
+@using Root.Application.DTOs.UserDtos
+@using Root.Domain.Enums
+@* Dashboard.razor *@
+<div class="container mt-4">
+    <h1 class="mb-4">Olá, <span class="text-primary">@AdminFullName</span></h1>
+    <div class="row g-4">
+        @* Cards principais *@
+        <div class="col-md-3">
+            <div class="card text-white bg-primary h-100 rounded rounded-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pacotes</h5>
+                    <p class="card-text display-6">@CountPackages</p>
+                </div>
+                <div class="card-footer">
+                    <small><i class="bi bi-box"></i> Total cadastrados</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-primary h-100 rounded rounded-3">
+                <div class="card-body">
+                    <h5 class="card-title">Guias</h5>
+                    <p class="card-text display-6">@CountGuides</p>
+                </div>
+                <div class="card-footer">
+                    <small><i class="bi bi-receipt"></i> Cadastrados</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-primary h-100 rounded rounded-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pedidos Pendentes</h5>
+                    <p class="card-text display-6">@CountPendingReserves</p>
+                </div>
+                <div class="card-footer">
+                    <small><i class="bi bi-hourglass-split"></i> Aguardando</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-primary h-100 rounded rounded-3">
+                <div class="card-body">
+                    <h5 class="card-title">Clientes</h5>
+                    <p class="card-text display-6">@CountClients</p>
+                </div>
+                <div class="card-footer">
+                    <small><i class="bi bi-people"></i> Cadastrados</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Widgets adicionais *@
+    <div class="row mt-5 g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Próximos Eventos</div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item">📦 Reposição Estoque – 20 Maio</li>
+                        <li class="list-group-item">📄 Validade Guia – 22 Maio</li>
+                        <li class="list-group-item">👥 Reunião com Clientes – 24 Maio</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">Tours em Andamento</div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item">🏝️ Ilha Mussulo com João</li>
+                        <li class="list-group-item">🏞️ Miradouro da Lua com Ana</li>
+                        <li class="list-group-item">🏙️ Luanda City Tour com Carlos</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @code {
-    
-}   
+    [CascadingParameter] public LoginListUserDto CurrentUser { get; set; } = new();
+
+    public ListAdminDto CurrentAdmin { get; set; } = new();
+
+    public string AdminFullName = "";
+
+    public int CountPackages { get; set; } = 0;
+    public int CountGuides { get; set; } = 0;
+    public int CountPendingReserves { get; set; } = 0;
+    public int CountClients { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentAdmin = await admins.GetAdminByIdAsync(CurrentUser.UserTypeId) ?? new();
+
+        CountPackages = (await packages.GetAllPackagesAsync()).Count;
+        CountGuides = (await guides.GetAllGuidesAsync()).Count;
+        CountPendingReserves = (await reserves.GetAllReservesAsync()).Count(p => p.ReserveStatus == ReserveStatus.Pending);
+        CountClients = (await clients.GetAllClientsAsync()).Count;
+        
+        AdminFullName = string.IsNullOrEmpty(CurrentAdmin.Surname) ? CurrentUser.User.UserName : CurrentAdmin.Name + " " + CurrentAdmin.Surname;
+        StateHasChanged();
+    }
+
+}

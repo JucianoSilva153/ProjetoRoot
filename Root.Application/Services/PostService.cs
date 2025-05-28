@@ -1,21 +1,49 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Root.Application.DTOs.PostDtos;
 using Root.Domain.Entities.Blog;
 using Root.Domain.Interfaces;
 
 namespace Root.Application.Services;
 
-public class PostService(IPostRepository postRepository)
+public class PostService(IPostRepository postRepository,ICategoryRepository categoryRepository,  IHttpContextAccessor contextAccessor)
 {
+    public Guid? GetCurrentUserId()
+    {
+        var currentUser = contextAccessor.HttpContext?.User;
+        var userStringId = currentUser?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        return Guid.Parse(userStringId!);
+    }
+
+    public string GetCurrentUserRole()
+    {
+        var currentUser = contextAccessor.HttpContext?.User;
+        var userrole = currentUser?.FindFirst(ClaimTypes.Role)?.Value;
+
+        return userrole ?? "";
+    }
+    
     public async Task<bool> CreatePostAsync(CreatePostDto dto)
     {
         try
         {
+            var userId = GetCurrentUserId();
+            if (userId is null)
+                return false;
+
+            var categories = await categoryRepository.GetAllAsync();
+            var selectedCategories = categories
+                .Where(c => dto.CategoryIds.Contains(c.Id))
+                .ToList();
+
             var post = new Post
             {
                 Title = dto.Title,
                 Content = dto.Content,
                 Image = dto.Image,
-                Categories = dto.CategoryIds?.Select(id => new Category { Id = id }).ToList() ?? new List<Category>()
+                Categories = selectedCategories,
+                ModifiedBy = userId
             };
 
             return await postRepository.CreateAsync(post);
@@ -34,6 +62,12 @@ public class PostService(IPostRepository postRepository)
         {
             var posts = await postRepository.GetAllAsync();
 
+            var userRole = GetCurrentUserRole();
+            if ( userRole != "Administrador" && !string.IsNullOrEmpty(GetCurrentUserRole()))
+            {
+                posts = posts.Where(p => p.ModifiedBy == GetCurrentUserId());
+            }
+            
             return posts.Select(p => new ListPostDto
             {
                 Id = p.Id,

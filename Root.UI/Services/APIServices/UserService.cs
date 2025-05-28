@@ -44,7 +44,6 @@ public class UserService(HttpClient client, LocalStorageService localStorageServ
 
         return false;
     }
-
     
     public async Task<LoginListUserDto?> LoginAsync(LoginUserDto loginDto)
     {

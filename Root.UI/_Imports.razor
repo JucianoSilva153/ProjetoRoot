@@ -16,6 +16,7 @@
 @using Root.UI.Pages.Dashboard.UserAccountPages
 @using Root.UI.Pages.Modals.ReserveModals
 @using Root.UI.Pages.Modals
+@using Blazored.TextEditor
 
 @inject UserService users
 @inject PackageService packages
@@ -26,6 +27,8 @@
 @inject ReserveService reserves
 @inject PaymentService payments
 @inject CartService carts
+@inject PostService posts
+@inject RouteParameterService RouteService
 
 @inject LocalStorageService LocalStorage
 @inject NavigationManager Navigator

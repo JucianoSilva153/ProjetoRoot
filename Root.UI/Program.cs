@@ -23,6 +23,8 @@ builder.Services.AddScoped<ClientService>();
 builder.Services.AddScoped<ReserveService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<CartService>();
+builder.Services.AddScoped<PostService>();
+builder.Services.AddScoped<RouteParameterService>();
 builder.Services.AddScoped<LocalStorageService>();
 
 await builder.Build().RunAsync();

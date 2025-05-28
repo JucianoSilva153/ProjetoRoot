@@ -1,0 +1,216 @@
+@layout DashboardLayout
+@page "/dashboard/post/new"
+@using Root.Application.DTOs.CategoryDtos
+@using Root.Application.DTOs.PostDtos
+<div class="d-flex w-100 flex-row align-content-between">
+    <div class="w-75">
+        <h1>Novo Artigo</h1>
+        <small class="text-danger">@erro</small>
+    </div>
+    <div class="d-flex justify-content-end align-items-center w-25">
+        <button class="btn btn-primary rounded-pill" @onclick='CreateNewPost'>
+            <i class="bi bi-plus-circle"></i>
+            <span>Salvar Artigo</span>
+        </button>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label for="titulo" class="form-label">Titulo</label>
+    <input @oninput='() => { erro = ""; }' @bind="NewPost.Title" type="text" class="form-control" id="titulo" placeholder="Titulo do artigo">
+</div>
+
+<div class="mb-3">
+    <label for="formFile" class="form-label">Imagem de capa</label>
+    <InputFile class="form-control" type="file" id="formFile" OnChange="OnInputFileChange"/>
+</div>
+
+<div class="mb-3">
+    <label for="atividades" class="form-label">Categorias</label>
+    <div class="d-flex">
+        <select @bind="CurrentCategoryId" id="atividades" class="form-select">
+            <option selected>Selecione uma categoria</option>
+            @foreach (var act in Categories)
+            {
+                <option value="@act.Id">@act.Title</option>
+            }
+        </select>
+        <button class="btn btn-primary" @onclick="AddCategory">
+            <i class="bi bi-plus-circle-fill"></i>
+        </button>
+    </div>
+    <ul class="list-group list-unstyled list-group-horizontal gap-2 pt-2">
+        @foreach (var act in NewPost.CategoryIds)
+        {
+            <li>
+                <span class="badge bg-primary rounded-pill px-2">
+                    <span>@CategoryName(act)</span>
+                    <span class="text-white" @onclick="RemoveCategory">
+                        <i class="bi bi-x"></i>
+                    </span>
+                </span>
+            </li>
+        }
+    </ul>
+</div>
+
+@if (IsQuillLoaded)
+{
+    <BlazoredTextEditor @ref="@TextEditor" EditorCssClass="contentEditor">
+        <ToolbarContent>
+            <select class="ql-header">
+                <option selected=""></option>
+                <option value="1"></option>
+                <option value="2"></option>
+                <option value="3"></option>
+                <option value="4"></option>
+                <option value="5"></option>
+            </select>
+            <span class="ql-formats">
+                <button class="ql-bold"></button>
+                <button class="ql-italic"></button>
+                <button class="ql-underline"></button>
+                <button class="ql-strike"></button>
+            </span>
+            <span class="ql-formats">
+                <select class="ql-color"></select>
+                <select class="ql-background"></select>
+            </span>
+            <span class="ql-formats">
+                <button class="ql-list" value="ordered"></button>
+                <button class="ql-list" value="bullet"></button>
+            </span>
+            <span class="ql-formats">
+                <button class="ql-link"></button>
+                <button class="ql-image"></button>
+            </span>
+        </ToolbarContent>
+        <EditorContent>
+            <h4>Texto de teste</h4>
+        </EditorContent>
+    </BlazoredTextEditor>
+}
+else
+{
+    <div class="text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando editor...</span>
+        </div>
+    </div>
+}
+
+
+@code {
+    private bool IsQuillLoaded = false;
+    public BlazoredTextEditor TextEditor { get; set; }
+    public CreatePostDto NewPost { get; set; } = new();
+    public string erro { get; set; } = "";
+
+    public RenderFragment content { get; set; }
+
+    public List<ListCategoryDto> Categories { get; set; } = [];
+    public Guid CurrentCategoryId { get; set; }
+
+    public string CategoryName(Guid id) => Categories.FirstOrDefault(c => c.Id == id)?.Title ?? "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categories = await posts.GetAllCategoriesAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("Entrou");
+        if (firstRender)
+        {
+            Console.WriteLine("Aqui");
+            while (!IsQuillLoaded)
+            {
+                Console.WriteLine("Dentro");
+
+                await Task.Delay(4000);
+                var isLoaded = await JS.InvokeAsync<bool>("checkQuillLoaded");
+                if (isLoaded)
+                {
+                    IsQuillLoaded = true;
+                    StateHasChanged();
+                    return;
+                }
+                else
+                {
+                    await Task.Delay(500);
+                }
+            }
+        }
+    }
+
+    private async void OnInputFileChange(InputFileChangeEventArgs obj)
+    {
+        IBrowserFile file = obj.File;
+        var buffer = new byte[file.Size];
+
+        using var stream = file.OpenReadStream();
+        await stream.ReadAsync(buffer);
+
+        NewPost.Image = Convert.ToBase64String(buffer);
+    }
+
+    private void AddCategory()
+    {
+        if (!NewPost.CategoryIds.Contains(CurrentCategoryId))
+            NewPost.CategoryIds.Add(CurrentCategoryId);
+        StateHasChanged();
+    }
+
+    private void RemoveCategory()
+    {
+        if (NewPost.CategoryIds.Contains(CurrentCategoryId))
+            NewPost.CategoryIds.Remove(CurrentCategoryId);
+        StateHasChanged();
+    }
+
+    private async Task CreateNewPost()
+    {
+        if (string.IsNullOrEmpty(NewPost.Title))
+        {
+            erro = "Por favor, insira um titulo para o artigo!";
+            StateHasChanged();
+            return;    
+        }
+
+
+        if (string.IsNullOrEmpty(NewPost.Image))
+        {
+            erro = "Por favor, selecione uma imagem de capa!";
+            StateHasChanged();
+            return;    
+        }
+
+        if (!NewPost.CategoryIds.Any())
+        {
+            erro = "Por favor, selecione pelo menos uma categoria!";
+            StateHasChanged();
+            return;
+        }
+        
+        var contentEditor = await JS.InvokeAsync<string>("getEditorContent", "ql-editor");
+        if (string.IsNullOrEmpty(contentEditor))
+        {
+            erro = "Por favor, escreva o artigo!!";
+            StateHasChanged();
+            return;
+        }
+
+        NewPost.Content = contentEditor;
+        var result = await posts.CreateNewPostAsync(NewPost);
+        if (!result)
+        {
+            erro = "Ocorreu um erro ao tentar salvar o post";
+            StateHasChanged();
+            return;
+        }
+
+        Navigator.NavigateTo("dashboard/posts");
+    }
+
+}

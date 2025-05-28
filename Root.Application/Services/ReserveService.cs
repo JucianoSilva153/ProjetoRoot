@@ -1,11 +1,21 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Root.Application.DTOs.ReserveDtos;
 using Root.Domain.Entities;
 using Root.Domain.Interfaces;
 
 namespace Root.Application.Services;
 
-public class ReserveService(IReserveRepository reserveRepository)
+public class ReserveService(IReserveRepository reserveRepository, IHttpContextAccessor contextAccessor)
 {
+    public Guid? GetCurrentUserId()
+    {
+        var currentUser = contextAccessor.HttpContext?.User;
+        var userStringId = currentUser?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        return Guid.Parse(userStringId!);
+    }
+    
     public async Task<bool> CreateReserveAsync(CreateReserveDto dto)
     {
         try

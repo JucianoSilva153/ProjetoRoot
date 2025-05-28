@@ -6,5 +6,5 @@ public class CreatePostDto
     public string Content { get; set; }
     public string Image { get; set; }
 
-    public List<Guid> CategoryIds { get; set; }
+    public List<Guid> CategoryIds { get; set; } = [];
 }

@@ -27,7 +27,9 @@ public class ClientRepository(RootDbContext dbContext) : IClientRepository
 
     public async Task<IEnumerable<Client>> GetAllAsync()
     {
-        return await _dbContext.Clients.ToListAsync();
+        return await _dbContext.Clients
+            .Include(c => c.User)
+            .ToListAsync();
     }
 
     public async Task<bool> UpdateAsync(Client entity)

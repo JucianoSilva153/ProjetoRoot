@@ -13,14 +13,14 @@
         </button>
     </div>
 </div>
-<NewActivityModal OnActivityCreated="async () => { await OnInitializedAsync();}"></NewActivityModal>
+<NewActivityModal OnActivityCreated="async () => { await OnInitializedAsync(); }"></NewActivityModal>
 
 <div class="row g-4 mt-4">
     @foreach (var act in ListActivity)
     {
-        <div class="col-lg-3 col-sm-6 d-flex">
+        <div class="col-lg-3 col-sm-6 d-flex" @onclick='() => { JS.InvokeVoidAsync("openModal", $"editActivityModal_{act.Id}");}'>
             <div class="service-item border-primary border-top border-4 rounded pt-3 d-flex flex-column w-100">
-                <div class="p-2 d-flex flex-column flex-grow-1" >
+                <div class="p-2 d-flex flex-column flex-grow-1">
                     <h5>@act.Name</h5>
                     <small class="flex-grow-1">@act.Description</small>
                     <div class="d-flex flex-row gap-3 pt-2 mt-auto">
@@ -34,12 +34,13 @@
                 </div>
             </div>
         </div>
+        <EditActivityModal Activity="act" OnActivityCreated='async () => { await OnInitializedAsync();}'></EditActivityModal>
     }
     @if (ListActivity.Count == 0)
     {
-    <div class="d-flex w-100 justify-content-center">
-        <small>Sem Atividades</small>
-    </div>
+        <div class="d-flex w-100 justify-content-center">
+            <small>Sem Atividades</small>
+        </div>
     }
 </div>
 
