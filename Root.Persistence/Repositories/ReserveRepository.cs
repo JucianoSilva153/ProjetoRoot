@@ -27,6 +27,9 @@ public class ReserveRepository(RootDbContext dbContext) : IReserveRepository
     {
         return await _dbContext.Reserves
             .Include(r => r.Client)
+                .ThenInclude(c => c.User)
+            .Include(r => r.Guide)
+                .ThenInclude(g => g.User)
             .Include(r => r.Package)
             .ToListAsync();
     }

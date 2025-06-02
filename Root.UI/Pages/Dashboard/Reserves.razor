@@ -1,6 +1,7 @@
 @layout DashboardLayout
 @page "/dashboard/reserves"
 @using Root.Application.DTOs.ReserveDtos
+@using Root.Application.DTOs.UserDtos
 @using Root.Domain.Enums
 
 <div class="d-flex w-100 flex-row align-content-between">
@@ -21,10 +22,14 @@
     <tr>
         <th scope="col">Pacote</th>
         <th scope="col">Pessoas</th>
+        <th scope="col">Guia</th>
         <th scope="col">Marcado para</th>
         <th scope="col">Total (AOA)</th>
         <th scope="col">Estado</th>
-        <th scope="col">Accoes</th>
+        @if (CurrentUser.User.Type != UserType.Guide)
+        {
+            <th scope="col">Accoes</th>
+        }
     </tr>
     </thead>
     <tbody>
@@ -33,36 +38,44 @@
         <tr>
             <th scope="row">@reserve.PackageName</th>
             <td>@reserve.PeopleCount</td>
+            <td>@reserve.GuideName</td>
             <td>@reserve.ReserveDate.ToShortDateString()</td>
             <td>@reserve.TotalPrice.ToString("C")</td>
             <td>@reserve.ReserveStatus.ToFriendlyString()</td>
-            <td>
-                @if (reserve.ReserveStatus == ReserveStatus.Reviewed)
-                {
-                    <button class="btn btn-primary rounded-pill">
-                        <i class="bi bi-eye-fill"></i>
-                    </button>
-                }
-                @if (reserve.ReserveStatus == ReserveStatus.Pending ||reserve.ReserveStatus == ReserveStatus.Reviewed)
-                {
-                    <button @onclick='async () => { await JS.InvokeVoidAsync("openModal",$"payReserveModal_{reserve.Id}"); }' class="btn btn-primary rounded-pill">
-                        <i class="bi bi-credit-card-2-back-fill"></i>
-                    </button>
-                }
-                @if (reserve.ReserveStatus == ReserveStatus.Pending)
-                {
-                    <button class="btn btn-secondary rounded-pill">
-                        <i class="bi bi-x-square-fill"></i>
-                    </button>
-                }
-            </td>
+            @if (CurrentUser.User.Type != UserType.Guide)
+            {
+                <td>
+                    @if (reserve.ReserveStatus == ReserveStatus.Reviewed)
+                    {
+                        <button class="btn btn-primary rounded-pill">
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+                    }
+                    @if (reserve.ReserveStatus == ReserveStatus.Pending || reserve.ReserveStatus == ReserveStatus.Reviewed)
+                    {
+                        <button
+                            @onclick='async () => { await JS.InvokeVoidAsync("openModal",$"payReserveModal_{reserve.Id}"); }'
+                            class="btn btn-primary rounded-pill">
+                            <i class="bi bi-credit-card-2-back-fill"></i>
+                        </button>
+                    }
+                    @if (reserve.ReserveStatus == ReserveStatus.Pending)
+                    {
+                        <button class="btn btn-secondary rounded-pill">
+                            <i class="bi bi-x-square-fill"></i>
+                        </button>
+                    }
+                </td>
+            }
         </tr>
-        <PayReserveModal Reserve="reserve" OnPaymentDone='async () => { await OnInitializedAsync(); }'></PayReserveModal>
+        <PayReserveModal Reserve="reserve"
+                         OnPaymentDone='async () => { await OnInitializedAsync(); }'></PayReserveModal>
     }
     </tbody>
 </table>
 
 @code {
+    [CascadingParameter] public LoginListUserDto CurrentUser { get; set; } = new();
     public List<ListReserveDto> ListReserve { get; set; } = [];
 
     protected override async Task OnInitializedAsync()

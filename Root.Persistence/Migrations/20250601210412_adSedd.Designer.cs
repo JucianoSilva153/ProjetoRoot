@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Root.Persistence.Context;
 
@@ -11,9 +12,11 @@ using Root.Persistence.Context;
 namespace Root.Persistence.Migrations
 {
     [DbContext(typeof(RootDbContext))]
-    partial class RootDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250601210412_adSedd")]
+    partial class adSedd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,8 +99,8 @@ namespace Root.Persistence.Migrations
                         {
                             Id = new Guid("5d5629f7-cce5-43b3-8a7f-821c9c5fd0a2"),
                             AcessLeves = "[0]",
-                            CreatedAt = new DateTime(2025, 6, 2, 12, 12, 29, 756, DateTimeKind.Local).AddTicks(1195),
-                            ModifiedAt = new DateTime(2025, 6, 2, 12, 12, 29, 756, DateTimeKind.Local).AddTicks(1196),
+                            CreatedAt = new DateTime(2025, 6, 1, 22, 4, 11, 139, DateTimeKind.Local).AddTicks(2658),
+                            ModifiedAt = new DateTime(2025, 6, 1, 22, 4, 11, 139, DateTimeKind.Local).AddTicks(2658),
                             Name = "Juciano",
                             Surname = "Silva",
                             UserId = new Guid("edd7155e-5723-4bf9-bd43-e935823a7c0f")
@@ -436,9 +439,9 @@ namespace Root.Persistence.Migrations
                         {
                             Id = new Guid("edd7155e-5723-4bf9-bd43-e935823a7c0f"),
                             Contact = "923679528",
-                            CreatedAt = new DateTime(2025, 6, 2, 12, 12, 29, 756, DateTimeKind.Local).AddTicks(1082),
+                            CreatedAt = new DateTime(2025, 6, 1, 22, 4, 11, 139, DateTimeKind.Local).AddTicks(2571),
                             Email = "jucs@gmail.com",
-                            ModifiedAt = new DateTime(2025, 6, 2, 12, 12, 29, 756, DateTimeKind.Local).AddTicks(1097),
+                            ModifiedAt = new DateTime(2025, 6, 1, 22, 4, 11, 139, DateTimeKind.Local).AddTicks(2583),
                             Password = "123456",
                             Type = 0,
                             UserName = "Jucs"

@@ -5,7 +5,7 @@ using Root.Domain.Interfaces;
 
 namespace Root.Application.Services;
 
-public class PackageService(IPackageRepository packageRepository)
+public class PackageService(IPackageRepository packageRepository, IActivityRepository activityRepository)
 {
     public async Task<bool> CreatePackageAsync(CreatePackageDto dto)
     {
@@ -95,9 +95,14 @@ public class PackageService(IPackageRepository packageRepository)
             package.Description = dto.Description ?? package.Description;
             package.Type = dto.Type ?? package.Type;
             package.BasePrice = dto.PackageBasePrice ?? package.BasePrice;
-            
+
             if (dto.ActivityIds is not null)
-                package.Activities = dto.ActivityIds.Select(id => new Activity { Id = id }).ToList();
+            {
+                var activities = (await activityRepository.GetAllAsync())
+                    .Where(a => dto.ActivityIds.Contains(a.Id)).ToList();
+                
+                package.Activities = activities;
+            }
 
             return await packageRepository.UpdateAsync(package);
         }

@@ -75,24 +75,4 @@
 
     public bool ShowMenuContactos => PageType == "package" || PageType == "about" ? false : true;
 
-    protected override async Task OnInitializedAsync()
-    {
-        var currentUser = await LocalStorage.GetItemAsync("currentUser");
-        if (currentUser is null)
-        {
-            return;
-        }
-
-        var CurrentUser = JsonSerializer.Deserialize<LoginListUserDto>(currentUser) ?? new LoginListUserDto();
-
-        ClientId = CurrentUser.UserTypeId;
-        Console.WriteLine("ID passado => " + CurrentUser.UserTypeId);
-
-        if (IsClient)
-        {
-            if (!(await carts.CartExists(ClientId)))
-                carts.RegisterCart(ClientId);
-        }
-        StateHasChanged();
-    }
 }

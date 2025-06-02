@@ -40,7 +40,9 @@ public class CartService(
     {
         Console.WriteLine(clientId);
         var stringJson = await localStorageService.GetItemAsync($"cart_{clientId}");
-        return JsonSerializer.Deserialize<Cart>(stringJson!);
+        if(string.IsNullOrEmpty(stringJson))
+            return null;
+        return JsonSerializer.Deserialize<Cart?>(stringJson);
     }
 
     public async Task<bool> CartExists(Guid clientId)

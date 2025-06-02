@@ -75,6 +75,7 @@ public class UserService(IUserRepository userRepository,
 
         return null;
     }
+    
 
     public async Task<bool> UpdateUserAsync(UpdateUserDto userDto)
     {
@@ -83,6 +84,7 @@ public class UserService(IUserRepository userRepository,
             var userToUpdate = await userRepository.GetByIdAsync(userDto.Id);
             if (userToUpdate is null)
                 return false;
+            
 
             userToUpdate.UserName = userDto.UserName ?? userToUpdate.UserName;
             userToUpdate.Contact = userDto.Contact ?? userToUpdate.Contact;
