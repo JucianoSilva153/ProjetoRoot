@@ -10,30 +10,63 @@
             <div class="form-section">
                 <div class="mb-3">
                     <label for="nome" class="form-label">Nome</label>
-                    <input required @oninput='() => { erro = ""; }' type="text" @bind="User.UserName" id="nome" class="form-control" placeholder="Seu nome completo"/>
+                    <input @oninput='() => ClearError("UserName")'
+                           type="text" 
+                           @bind="User.UserName" 
+                           id="nome" 
+                           class="form-control @(GetInputClass(nameof(User.UserName)))" 
+                           placeholder="Seu nome completo"/>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(User.UserName))</div>
                 </div>
+                
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
-                    <input required @oninput='() => { erro = ""; }' type="email" @bind="User.Email" id="email" class="form-control" placeholder="seu@email.com"/>
+                    <input @oninput='() => ClearError("Email")' 
+                           type="email" 
+                           @bind="User.Email" 
+                           id="email" 
+                           class="form-control @(GetInputClass(nameof(User.Email)))" 
+                           placeholder="seu@email.com"/>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(User.Email))</div>
                 </div>
+                
                 <div class="mb-3">
                     <label for="contacto" class="form-label">Contacto</label>
-                    <input required @oninput='() => { erro = ""; }' type="number" @bind="User.Contact" id="contacto" class="form-control" placeholder="Ex.: 999 999 999"/>
+                    <input @oninput='() => ClearError("Contact")'
+                           type="text" 
+                           @bind="User.Contact" 
+                           id="contacto" 
+                           class="form-control @(GetInputClass(nameof(User.Contact)))" 
+                           placeholder="Ex.: 999999999"
+                           maxlength="9"/>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(User.Contact))</div>
                 </div>
+                
                 <div class="d-flex gap-2">
                     <div class="mb-3">
                         <label for="senha" class="form-label">Senha</label>
-                        <input required @oninput='() => { erro = ""; }' type="password" @bind="User.Password" id="senha" class="form-control" placeholder="Crie uma senha"/>
+                        <input @oninput='() => ClearError("Password")' 
+                               type="password" 
+                               @bind="User.Password" 
+                               id="senha" 
+                               class="form-control @(GetInputClass(nameof(User.Password)))" 
+                               placeholder="Crie uma senha"/>
+                        <div class="invalid-feedback">@GetErrorMessage(nameof(User.Password))</div>
                     </div>
                     <div class="mb-3">
                         <label for="confirmarSenha" class="form-label">Confirmar Senha</label>
-                        <input required @oninput='() => { erro = ""; }' type="password" @bind="confirmPassword" id="confirmarSenha" class="form-control" placeholder="Confirme a senha"/>
+                        <input @oninput='() => ClearError("ConfirmPassword")' 
+                               type="password" 
+                               @bind="confirmPassword" 
+                               id="confirmarSenha" 
+                               class="form-control @(GetInputClass("ConfirmPassword"))" 
+                               placeholder="Confirme a senha"/>
+                        <div class="invalid-feedback">@GetErrorMessage("ConfirmPassword")</div>
                     </div>
                 </div>
-                <button class="btn btn-success w-100" @onclick="CreateNewUser">Cadastrar</button>
-                <small>
-                    <span class="text-danger">@erro</span>
-                </small>
+                
+                <button class="btn btn-success w-100" @onclick="ValidateAndSubmit">Cadastrar</button>
+                
                 <div class="text-center mt-3">
                     <small>Já tem conta? <a href="login">Entrar</a></small>
                 </div>
@@ -44,8 +77,8 @@
 
 @code {
     public CreateUserDto User { get; set; } = new();
-    string erro { get; set; } = "";
-    string confirmPassword = "";
+    private string confirmPassword = "";
+    private Dictionary<string, string> errors = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -57,37 +90,125 @@
         }
     }
 
-    public async void CreateNewUser()
+    private void ClearError(string fieldName)
     {
-        if (string.IsNullOrEmpty(User.UserName)
-            || string.IsNullOrEmpty(User.Contact)
-            || string.IsNullOrEmpty(User.Email)
-            || string.IsNullOrEmpty(User.Password))
+        if (errors.ContainsKey(fieldName))
         {
-            erro = "Por favor, preencha todos os campos!!";
-            Console.WriteLine(User.UserName);
-            Console.WriteLine(User.Contact);
-            Console.WriteLine(User.Password);
-            Console.WriteLine(User.Email);
-            return;
+            errors.Remove(fieldName);
         }
+    }
 
-        if (User.Password != confirmPassword)
+    private string GetInputClass(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
+
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private bool ValidateField(string fieldName, string value)
+    {
+        switch (fieldName)
         {
-            erro = "As palavra passe de confirmação é diferente!";
-            return;
-        }
+            case nameof(User.UserName):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "O nome é obrigatório";
+                    return false;
+                }
+                if (value.Length < 3 || value.Length > 100)
+                {
+                    errors[fieldName] = "O nome deve ter entre 3 e 100 caracteres";
+                    return false;
+                }
+                return true;
 
+            case nameof(User.Email):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "O email é obrigatório";
+                    return false;
+                }
+                if (!value.Contains("@") || !value.Contains("."))
+                {
+                    errors[fieldName] = "Por favor, insira um email válido";
+                    return false;
+                }
+                return true;
+
+            case nameof(User.Contact):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "O contacto é obrigatório";
+                    return false;
+                }
+                if (value.Length != 9 || !value.All(char.IsDigit))
+                {
+                    errors[fieldName] = "O contacto deve ter exatamente 9 dígitos";
+                    return false;
+                }
+                return true;
+
+            case nameof(User.Password):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "A senha é obrigatória";
+                    return false;
+                }
+                if (value.Length < 6)
+                {
+                    errors[fieldName] = "A senha deve ter pelo menos 6 caracteres";
+                    return false;
+                }
+                return true;
+
+            case "ConfirmPassword":
+                if (User.Password != confirmPassword)
+                {
+                    errors[fieldName] = "As senhas não coincidem";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+        
+        isValid &= ValidateField(nameof(User.UserName), User.UserName);
+        isValid &= ValidateField(nameof(User.Email), User.Email);
+        isValid &= ValidateField(nameof(User.Contact), User.Contact);
+        isValid &= ValidateField(nameof(User.Password), User.Password);
+        isValid &= ValidateField("ConfirmPassword", confirmPassword);
+        
+        return isValid;
+    }
+
+    private async Task ValidateAndSubmit()
+    {
+        if (ValidateForm())
+        {
+            await CreateNewUser();
+        }
+    }
+
+    public async Task CreateNewUser()
+    {
         User.Type = UserType.Client;    
         var result = await users.NewUserAsync(User);
 
         if (!result)
         {
-            erro = "Ocorreu um erro ao tentar criar Conta!Por favor tente mais tarde!";
+            errors["General"] = "Ocorreu um erro ao tentar criar Conta! Por favor tente mais tarde!";
             return;
         }
         
         Navigator.NavigateTo("/login");
     }
-
 }
