@@ -55,9 +55,9 @@
     </div>
 </nav>
 
-@if (ClientId != Guid.Empty && IsClient)
+@if (CurrentUser.UserTypeId != Guid.Empty && IsClient)
 {
-    <CartModal ClientId="ClientId"></CartModal>
+    <CartModal ClientId="CurrentUser.UserTypeId"></CartModal>
 }
 
 @code
@@ -65,7 +65,21 @@
     [Parameter] public bool IsLoggedIn { get; set; }
     [Parameter] public bool IsClient { get; set; } = false;
     [Parameter] public string PageType { get; set; } = "";
-    public Guid ClientId { get; set; }
+    
+    public LoginListUserDto CurrentUser { get; set; } = new LoginListUserDto { User = new ListUserDto(), Token = "" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = await LocalStorage.GetItemAsync("currentUser");
+        if (currentUser is null)
+        {
+            IsLoggedIn = false; 
+            return;
+        }
+
+        IsLoggedIn = true;
+        CurrentUser = JsonSerializer.Deserialize<LoginListUserDto>(currentUser) ?? new LoginListUserDto();
+    }
 
     public bool ShowMenuSobre => PageType == "package" || PageType == "about" ? false : true;
 

@@ -1,3 +1,4 @@
+@using System.Text.RegularExpressions
 @using Root.Application.DTOs.GuideDtos
 @using Root.Application.DTOs.UserDtos
 @using Root.Domain.Enums
@@ -5,68 +6,198 @@
 <div class="modal fade" id="newGuiaModal" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Novo Guia</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Cadastrar Novo Guia</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="nome" class="form-label">Nome de Usuario</label>
-                    <input required @oninput='() => { erro = ""; }' type="text" @bind="User.UserName" id="nome" class="form-control" placeholder="Nome de usuario do guia"/>
+                    <label for="nome" class="form-label fw-bold">Nome de Usuário</label>
+                    <input @oninput='() => ClearError(nameof(User.UserName))' 
+                           @bind="User.UserName" 
+                           type="text" 
+                           class="form-control @(GetInputClass(nameof(User.UserName)))" 
+                           id="nome" 
+                           placeholder="Ex: guia_joao"
+                           maxlength="50"/>
+                    <small class="text-muted">Mínimo 3 caracteres, apenas letras, números e underscore</small>
+                    <div class="invalid-feedback d-block">@GetErrorMessage(nameof(User.UserName))</div>
                 </div>
+                
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input required @oninput='() => { erro = ""; }' type="email" @bind="User.Email" id="email" class="form-control" placeholder="email do guia"/>
+                    <label for="email" class="form-label fw-bold">Email</label>
+                    <input @oninput='() => ClearError(nameof(User.Email))' 
+                           @bind="User.Email" 
+                           type="email" 
+                           class="form-control @(GetInputClass(nameof(User.Email)))" 
+                           id="email" 
+                           placeholder="Ex: guia@empresa.com"
+                           maxlength="100"/>
+                    <div class="invalid-feedback d-block">@GetErrorMessage(nameof(User.Email))</div>
                 </div>
+                
                 <div class="mb-3">
-                    <label for="contacto" class="form-label">Contacto</label>
-                    <input required @oninput='() => { erro = ""; }' type="number" @bind="User.Contact" id="contacto" class="form-control" placeholder="Ex.: 999 999 999"/>
+                    <label for="contacto" class="form-label fw-bold">Contacto</label>
+                    <input @oninput='() => ClearError(nameof(User.Contact))' 
+                           @bind="User.Contact" 
+                           type="tel" 
+                           class="form-control @(GetInputClass(nameof(User.Contact)))" 
+                           id="contacto" 
+                           placeholder="Ex: 912345678"
+                           maxlength="15"/>
+                    <small class="text-muted">Apenas números, mínimo 9 dígitos</small>
+                    <div class="invalid-feedback d-block">@GetErrorMessage(nameof(User.Contact))</div>
                 </div>
-
-                <small>
-                    <span class="text-danger">@erro</span>
-                </small>
-                <small class="text-danger">@erro</small>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Uma senha padrão será gerada automaticamente para o guia.
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" @onclick="CreateNewGuide">Salvar</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" @onclick="ValidateAndCreate" disabled="@isSubmitting">
+                    <i class="bi bi-person-plus me-2"></i>
+                    <span>@(isSubmitting ? "Cadastrando..." : "Cadastrar Guia")</span>
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden="@(!isSubmitting)"></span>
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-
 @code {
     [Parameter] public Action OnGuideCreated { get; set; }
-    public string erro { get; set; } = "";
     public CreateUserDto User { get; set; } = new();
+    private Dictionary<string, string> errors = new();
+    private bool isSubmitting = false;
 
-    private async void CreateNewGuide()
+    private string GetInputClass(string fieldName)
     {
-
-
-        if (string.IsNullOrEmpty(User.UserName)
-            || string.IsNullOrEmpty(User.Contact)
-            || string.IsNullOrEmpty(User.Email))
-        {
-            erro = "Por favor, preencha todos os campos!!";
-            return;
-        }
-
-        User.UserName = User.UserName.Trim();
-        User.Type = UserType.Guide;    
-        User.Password = "000000";    
-        var result = await users.NewUserAsync(User);
-
-        if (!result)
-        {
-            erro = "Ocorreu um erro ao tentar criar conta do guia! Por favor tente mais tarde!";
-            return;
-        }
-        StateHasChanged();
-        OnGuideCreated.Invoke();
-        await JS.InvokeVoidAsync("closeModal", "newGuiaModal");
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
     }
 
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+            StateHasChanged();
+        }
+    }
+
+    private bool ValidateField(string fieldName, string value)
+    {
+        switch (fieldName)
+        {
+            case nameof(User.UserName):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "O nome de usuário é obrigatório";
+                    return false;
+                }
+                if (value.Length < 3)
+                {
+                    errors[fieldName] = "Mínimo 3 caracteres";
+                    return false;
+                }
+                if (!Regex.IsMatch(value, @"^[a-zA-Z0-9_]+$"))
+                {
+                    errors[fieldName] = "Apenas letras, números e underscore (_)";
+                    return false;
+                }
+                return true;
+
+            case nameof(User.Email):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "O email é obrigatório";
+                    return false;
+                }
+                if (!Regex.IsMatch(value, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    errors[fieldName] = "Informe um email válido";
+                    return false;
+                }
+                return true;
+
+            case nameof(User.Contact):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "O contacto é obrigatório";
+                    return false;
+                }
+                if (value.Length < 9)
+                {
+                    errors[fieldName] = "Mínimo 9 dígitos";
+                    return false;
+                }
+                if (!Regex.IsMatch(value, @"^[1-9]+$"))
+                {
+                    errors[fieldName] = "Apenas números são permitidos";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+        
+        isValid &= ValidateField(nameof(User.UserName), User.UserName);
+        isValid &= ValidateField(nameof(User.Email), User.Email);
+        isValid &= ValidateField(nameof(User.Contact), User.Contact);
+        
+        return isValid;
+    }
+
+    private async Task ValidateAndCreate()
+    {
+        if (isSubmitting) return;
+        
+        if (!ValidateForm())
+        {
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            User.UserName = User.UserName.Trim();
+            User.Type = UserType.Guide;    
+            User.Password = "000000"; // Senha padrão
+            
+            var result = await users.NewUserAsync(User);
+            
+            if (!result)
+            {
+                errors["General"] = "Erro ao cadastrar. Verifique os dados ou tente novamente.";
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            // Reset form on success
+            User = new CreateUserDto();
+            await InvokeAsync(() => {
+                OnGuideCreated.Invoke();
+                JS.InvokeVoidAsync("closeModal", "newGuiaModal");
+            });
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
 }

@@ -2,6 +2,7 @@
 @using Root.Application.DTOs.PackageDtos
 @using Root.Application.DTOs.ReserveDtos
 @using Root.Application.DTOs.UserDtos
+
 <div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -18,26 +19,42 @@
                         data de marcação!</h6>
                 </div>
                 <div class="my-4 gap-2">
-                    <input @bind="NewReserve.PeopleCount" type="number" placeholder="Numero de pessoas"
-                           class="form-control"/>
-                    <select @bind="NewReserve.GuideId" placeholder="Selecione um Guia" class="form-control">
-                        <option>Selecione um Guia</option>
-                        @foreach (var guide in Guides)
-                        {
-                            <option value="@guide.Id">@guide.Name @guide.Surname - @guide.Description</option>
-                        }
-                    </select>
-                    <input @bind="NewReserve.ReserveDate" type="date" placeholder="Data" class="form-control"/>
+                    <div class="mb-3">
+                        <input @bind="NewReserve.PeopleCount" 
+                               type="number" 
+                               placeholder="Número de pessoas"
+                               class="form-control @(GetInputClass(nameof(NewReserve.PeopleCount)))"/>
+                        <div class="invalid-feedback">@GetErrorMessage(nameof(NewReserve.PeopleCount))</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <select @bind="NewReserve.GuideId" 
+                                class="form-control @(GetInputClass(nameof(NewReserve.GuideId)))">
+                            <option value="">Selecione um Guia</option>
+                            @foreach (var guide in Guides)
+                            {
+                                <option value="@guide.Id">@guide.Name @guide.Surname - @guide.Description</option>
+                            }
+                        </select>
+                        <div class="invalid-feedback">@GetErrorMessage(nameof(NewReserve.GuideId))</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <input @bind="NewReserve.ReserveDate" 
+                               type="date" 
+                               placeholder="Data" 
+                               class="form-control @(GetInputClass(nameof(NewReserve.ReserveDate)))"/>
+                        <div class="invalid-feedback">@GetErrorMessage(nameof(NewReserve.ReserveDate))</div>
+                    </div>
                 </div>
                 <div>
                     <small>Depois de se confirmar o agendamento, será redirecionado para sua conta e poderá verificar
                         mais detalhes sobre o pagamento!!</small>
                 </div>
-                <small class="text-danger">@erro</small>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" @onclick="BookPackage">Agendar</button>
+                <button type="button" class="btn btn-primary" @onclick="ValidateAndBook">Agendar</button>
             </div>
         </div>
     </div>
@@ -51,43 +68,103 @@
     public string ModalId => $"bookPackModal_{Package.Id}";
     public CreateReserveDto NewReserve { get; set; } = new();
     public List<ListGuidesDto> Guides { get; set; } = new();
-    public string erro { get; set; } = "";
+    private Dictionary<string, string> errors = new();
 
     protected override async Task OnInitializedAsync()
     {
         Guides = await guides.GetAllGuidesAsync();
     }
 
-    public async void BookPackage()
+    private string GetInputClass(string fieldName)
     {
-        if (NewReserve.PeopleCount == 0)
-        {
-            erro = "Por favor, insira o numero de pessoas que participarao do pacote!";
-            StateHasChanged();
-            return;
-        }
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
 
-        if (NewReserve.GuideId == Guid.Empty)
-        {
-            erro = "Por favor, selecione um guia turistico disponivel!!";
-            StateHasChanged();
-            return;
-        }
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
 
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+        }
+    }
+
+    private bool ValidateField(string fieldName)
+    {
+        switch (fieldName)
+        {
+            case nameof(NewReserve.PeopleCount):
+                if (NewReserve.PeopleCount <= 0)
+                {
+                    errors[fieldName] = "Por favor, insira um número válido de participantes";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewReserve.GuideId):
+                if (NewReserve.GuideId == Guid.Empty)
+                {
+                    errors[fieldName] = "Por favor, selecione um guia turístico";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewReserve.ReserveDate):
+                if (NewReserve.ReserveDate == default)
+                {
+                    errors[fieldName] = "Por favor, selecione uma data válida";
+                    return false;
+                }
+                if (NewReserve.ReserveDate < DateTime.Today)
+                {
+                    errors[fieldName] = "A data não pode ser anterior ao dia atual";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+        
+        isValid &= ValidateField(nameof(NewReserve.PeopleCount));
+        isValid &= ValidateField(nameof(NewReserve.GuideId));
+        isValid &= ValidateField(nameof(NewReserve.ReserveDate));
+        
+        return isValid;
+    }
+
+    private async Task ValidateAndBook()
+    {
+        if (ValidateForm())
+        {
+            await BookPackage();
+        }
+    }
+
+    public async Task BookPackage()
+    {
         NewReserve.PackageId = Package.Id;
         NewReserve.ClientId = CurrentUser.UserTypeId == Guid.Empty ? ClientId!.Value : CurrentUser.UserTypeId;
         NewReserve.TotalPrice = Package.PackageBasePrice + Package.ActivitiesPackagePrice;
 
         var result = await reserves.CreateNewReserveAsync(NewReserve);
+        
         if (!result)
         {
-            erro = "Ocorreu um erro fazer agendamente! Por favor tente mais tarde ou entre contacto com o apoio ao cliente!!";
-            StateHasChanged();
+            errors["General"] = "Ocorreu um erro ao fazer o agendamento! Por favor tente mais tarde ou entre em contacto com o apoio ao cliente!";
             return;
         }
 
         await JS.InvokeVoidAsync("closeModal", ModalId);
         Navigator.NavigateTo("dashboard/reserves");
     }
-
 }

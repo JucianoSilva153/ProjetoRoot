@@ -13,7 +13,7 @@
         </div>
     </div>
     <div class="d-flex justify-content-end align-items-center w-25">
-        <button class="btn btn-primary rounded-pill" @onclick='UpdateNewGuide'>
+        <button class="btn btn-primary rounded-pill" @onclick='ValidateAndUpdate'>
             <i class="bi bi-plus-circle"></i>
             <span>Guardar</span>
         </button>
@@ -22,29 +22,62 @@
 
 <div class="mb-3">
     <label for="nome" class="form-label">Nome</label>
-    <input @oninput='() => { erro = ""; }' @bind="NewGuide.Name" type="text" class="form-control" id="nome" placeholder="Nome do guia">
+    <input @oninput='() => ClearError(nameof(NewGuide.Name))' 
+           @bind="NewGuide.Name" 
+           type="text" 
+           class="form-control @(GetInputClass(nameof(NewGuide.Name)))" 
+           id="nome" 
+           placeholder="Nome do guia">
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewGuide.Name))</div>
 </div>
+
 <div class="mb-3">
     <label for="sobrenome" class="form-label">Sobrenome</label>
-    <input @oninput='() => { erro = ""; }' @bind="NewGuide.Surname" type="text" class="form-control" id="sobrenome" placeholder="Sobrenome do guia">
+    <input @oninput='() => ClearError(nameof(NewGuide.Surname))' 
+           @bind="NewGuide.Surname" 
+           type="text" 
+           class="form-control @(GetInputClass(nameof(NewGuide.Surname)))" 
+           id="sobrenome" 
+           placeholder="Sobrenome do guia">
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewGuide.Surname))</div>
 </div>
+
 <div class="mb-3">
-    <label for="descricao" class="form-label">Descricao</label>
-    <textarea @oninput='() => { erro = ""; }' @bind="NewGuide.Description" class="form-control" id="descricao" rows="3"></textarea>
+    <label for="descricao" class="form-label">Descrição</label>
+    <textarea @oninput='() => ClearError(nameof(NewGuide.Description))' 
+              @bind="NewGuide.Description" 
+              class="form-control @(GetInputClass(nameof(NewGuide.Description)))" 
+              id="descricao" 
+              rows="3"></textarea>
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewGuide.Description))</div>
 </div>
+
 <div class="mb-3 w-auto">
-    <label for="localizacao" class="form-label">Localizacao</label>
-    <input @oninput='() => { erro = ""; }' @bind="NewGuide.Location" class="form-control" type="text" id="localizacao" placeholder="Localizacao do guia">
+    <label for="localizacao" class="form-label">Localização</label>
+    <input @oninput='() => ClearError(nameof(NewGuide.Location))' 
+           @bind="NewGuide.Location" 
+           class="form-control @(GetInputClass(nameof(NewGuide.Location)))" 
+           type="text" 
+           id="localizacao" 
+           placeholder="Localização do guia">
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewGuide.Location))</div>
 </div>
+
 <div class="mb-3">
     <label for="formFile" class="form-label">Imagem do Guia</label>
-    <InputFile class="form-control" type="file" id="formFile" OnChange="OnInputFileChange"/>
+    <InputFile class='@(GetInputClass("Image"))'
+               type="file" 
+               id="formFile" 
+               OnChange="OnInputFileChange"/>
+    <div class="invalid-feedback">@GetErrorMessage("Image")</div>
 </div>
 
 <div class="mb-3">
     <label for="idioms" class="form-label">Idiomas</label>
     <div class="d-flex">
-        <select @bind="CurrentIdiom" id="idioms" class="form-select">
+        <select @bind="CurrentIdiom" 
+                id="idioms" 
+                class="form-select @(GetInputClass("Idioms"))">
             <option selected value="">Selecione um idioma</option>
             <option value="Português">Português</option>
             <option value="Inglês">Inglês</option>
@@ -68,6 +101,7 @@
             </li>
         }
     </ol>
+    <div class="invalid-feedback">@GetErrorMessage("Idioms")</div>
 </div>
 
 @code {
@@ -77,6 +111,7 @@
     public string sucesso { get; set; } = "";
     public ListGuidesDto OldGuide { get; set; } = new();
     public ListGuidesDto NewGuide { get; set; } = new();
+    private Dictionary<string, string> errors = new();
     
     private string ImageDataUrl =>
         $"data:image/png;base64,{NewGuide.Image}";
@@ -94,32 +129,123 @@
             Surname = getGuide?.Surname ?? "",
             Description = getGuide?.Description,
             Location = getGuide?.Location,
-            Idioms = getGuide?.Idioms?.ToList(), // Cópia da lista para evitar referência compartilhada
+            Idioms = getGuide?.Idioms?.ToList(),
             Image = getGuide?.Image,
             UserId = getGuide?.UserId ?? new Guid(),
             UserName = getGuide?.UserName ?? ""
         };
     }
 
-    private async void UpdateNewGuide()
+    private string GetInputClass(string fieldName)
     {
-        if (NewGuide.Idioms!.Count == 0)
-        {
-            erro = "Por favor adicione pelo menos um idioma!";
-            StateHasChanged();
-            return;
-        }
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
 
-        if (string.IsNullOrEmpty(NewGuide.Name)
-            || string.IsNullOrEmpty(NewGuide.Description)
-            || string.IsNullOrEmpty(NewGuide.Location)
-            || string.IsNullOrEmpty(NewGuide.Surname))
-        {
-            erro = "Por favor preencha todos os campos!";
-            StateHasChanged();
-            return;
-        }
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
 
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+            erro = "";
+        }
+    }
+
+    private bool ValidateField(string fieldName)
+    {
+        switch (fieldName)
+        {
+            case nameof(NewGuide.Name):
+                if (string.IsNullOrWhiteSpace(NewGuide.Name))
+                {
+                    errors[fieldName] = "Por favor, informe o nome do guia";
+                    return false;
+                }
+                if (NewGuide.Name.Length < 2)
+                {
+                    errors[fieldName] = "O nome deve ter pelo menos 2 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewGuide.Surname):
+                if (string.IsNullOrWhiteSpace(NewGuide.Surname))
+                {
+                    errors[fieldName] = "Por favor, informe o sobrenome do guia";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewGuide.Description):
+                if (string.IsNullOrWhiteSpace(NewGuide.Description))
+                {
+                    errors[fieldName] = "Por favor, informe a descrição do guia";
+                    return false;
+                }
+                if (NewGuide.Description.Length < 10)
+                {
+                    errors[fieldName] = "A descrição deve ter pelo menos 10 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewGuide.Location):
+                if (string.IsNullOrWhiteSpace(NewGuide.Location))
+                {
+                    errors[fieldName] = "Por favor, informe a localização do guia";
+                    return false;
+                }
+                return true;
+
+            case "Idioms":
+                if (NewGuide.Idioms == null || NewGuide.Idioms.Count == 0)
+                {
+                    errors[fieldName] = "Por favor, adicione pelo menos um idioma";
+                    return false;
+                }
+                return true;
+
+            case "Image":
+                if (string.IsNullOrWhiteSpace(NewGuide.Image))
+                {
+                    errors[fieldName] = "Por favor, adicione uma imagem para o guia";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+        
+        isValid &= ValidateField(nameof(NewGuide.Name));
+        isValid &= ValidateField(nameof(NewGuide.Surname));
+        isValid &= ValidateField(nameof(NewGuide.Description));
+        isValid &= ValidateField(nameof(NewGuide.Location));
+        isValid &= ValidateField("Idioms");
+        isValid &= ValidateField("Image");
+        
+        return isValid;
+    }
+
+    private async Task ValidateAndUpdate()
+    {
+        if (ValidateForm())
+        {
+            await UpdateNewGuide();
+        }
+    }
+
+    private async Task UpdateNewGuide()
+    {
         var guideToUpdate = new UpdateGuideDto
         {
             Id = NewGuide.Id,
@@ -131,18 +257,16 @@
             Image = NewGuide.Image == OldGuide.Image ? null : NewGuide.Image
         };
         
-
         var result = await guides.UpdateGuideAsync(guideToUpdate);
         if (!result)
         {
-            erro = "Ocorreu um erro ao tentar criar um novo guia!!";
+            errors["General"] = "Ocorreu um erro ao tentar atualizar o guia!";
             StateHasChanged();
             return;
         }
 
         await OnInitializedAsync();
-        sucesso = "Dados Atualizados!!";
-        erro = "";
+        sucesso = "Dados atualizados com sucesso!";
         StateHasChanged();
     }
 
@@ -150,7 +274,7 @@
     {
         if (string.IsNullOrEmpty(CurrentIdiom))
         {
-            erro = "Por favor Selecione uma idioma!!";
+            errors["Idioms"] = "Por favor, selecione um idioma!";
             StateHasChanged();
             return;
         }
@@ -160,6 +284,8 @@
 
         if (!NewGuide.Idioms.Contains(CurrentIdiom))
             NewGuide.Idioms.Add(CurrentIdiom);
+
+        ClearError("Idioms");
     }
 
     private void RemoveIdiom(string idiom)
@@ -177,6 +303,6 @@
         await stream.ReadAsync(buffer);
 
         NewGuide.Image = Convert.ToBase64String(buffer);
+        ClearError("Image");
     }
-
 }

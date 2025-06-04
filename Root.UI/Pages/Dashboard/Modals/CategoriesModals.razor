@@ -1,6 +1,7 @@
 @using Root.Application.DTOs.ActivityDto
 @using Root.Application.DTOs.CategoryDtos
 @using Root.Domain.Enums
+
 <div class="modal fade" id="categoriesModal" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -9,68 +10,124 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="nome" class="form-label">Nome</label>
-                        <input @oninput='() => { erro = ""; }' @bind="NewCategory.Title" type="text" class="form-control" id="nome" placeholder="Nome da categoria">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome</label>
+                    <input @oninput='() => ClearError(nameof(NewCategory.Title))' 
+                           @bind="NewCategory.Title" 
+                           type="text" 
+                           class="form-control @(GetInputClass(nameof(NewCategory.Title)))" 
+                           id="nome" 
+                           placeholder="Nome da categoria"/>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(NewCategory.Title))</div>
+                </div>
+                
+                <div class="d-flex gap-2 w-100">
+                    <div class="mb-3 w-auto">
+                        <label for="disponiveis" class="form-label">Categorias Disponíveis</label>
+                        <select class="form-select" id="disponiveis">
+                            @foreach (var cat in Categories)
+                            {
+                                <option>@cat.Title</option>
+                            }
+                            @if (!Categories.Any())
+                            {
+                                <option>Sem Categorias</option>
+                            }
+                        </select>
                     </div>
-                    <div class="d-flex gap-2 w-100">
-                        <div class="mb-3 w-auto">
-                            <label for="disponiveis" class="form-label">Categorias Disponiveis</label>
-                            <select @oninput='() => { erro = ""; }' class="form-select" id="disponiveis">
-                                @foreach (var cat in Categories)
-                                {
-                                    <option>@cat.Title</option>
-                                }
-                                @if (Categories.Count() == 0)
-                                {
-                                    <option>Sem Categorias</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
-                    <small class="text-danger">@erro</small>
-                </form>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" @onclick="CreateNewCategory">Salvar</button>
+                <button type="button" class="btn btn-primary" @onclick="ValidateAndCreate">Salvar</button>
             </div>
         </div>
     </div>
 </div>
 
-
 @code {
-    public string erro { get; set; } = "";
     public CreateCategoryDto NewCategory { get; set; } = new();
-    public List<ListCategoryDto> Categories { get; set; } = [];
+    public List<ListCategoryDto> Categories { get; set; } = new();
+    private Dictionary<string, string> errors = new();
 
     protected override async Task OnInitializedAsync()
     {
         Categories = await posts.GetAllCategoriesAsync();
-        StateHasChanged();
     }
 
-    private async void CreateNewCategory()
+    private string GetInputClass(string fieldName)
     {
-        if (string.IsNullOrEmpty(NewCategory.Title))
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
+
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
         {
-            erro = "Por favor, insira a categoria!!";
-            StateHasChanged();
-            return;
+            errors.Remove(fieldName);
         }
-        
+    }
+
+    private bool ValidateField(string fieldName, string value)
+    {
+        switch (fieldName)
+        {
+            case nameof(NewCategory.Title):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "Por favor, insira o nome da categoria";
+                    return false;
+                }
+                if (value.Length < 3)
+                {
+                    errors[fieldName] = "O nome da categoria deve ter pelo menos 3 caracteres";
+                    return false;
+                }
+                if (Categories.Any(c => c.Title.Equals(value, StringComparison.OrdinalIgnoreCase)))
+                {
+                    errors[fieldName] = "Já existe uma categoria com este nome";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        return ValidateField(nameof(NewCategory.Title), NewCategory.Title);
+    }
+
+    private async Task ValidateAndCreate()
+    {
+        if (ValidateForm())
+        {
+            await CreateNewCategory();
+        }
+    }
+
+    private async Task CreateNewCategory()
+    {
         var result = await posts.CreateNewCategoryAsync(NewCategory);
+        
         if (!result)
         {
-            erro = "Ocorreu um erro ao tentar criar uma nova categoria!!";
+            errors["General"] = "Ocorreu um erro ao tentar criar a categoria";
             StateHasChanged();
             return;
         }
         
+        // Limpa o formulário após sucesso
+        NewCategory = new CreateCategoryDto();
+        Categories = await posts.GetAllCategoriesAsync();
+        ClearError(nameof(NewCategory.Title));
         StateHasChanged();
-        await OnInitializedAsync();
     }
-
 }

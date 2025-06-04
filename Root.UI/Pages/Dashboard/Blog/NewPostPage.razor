@@ -2,116 +2,143 @@
 @page "/dashboard/post/new"
 @using Root.Application.DTOs.CategoryDtos
 @using Root.Application.DTOs.PostDtos
-<div class="d-flex w-100 flex-row align-content-between">
-    <div class="w-75">
-        <h1>Novo Artigo</h1>
-        <small class="text-danger">@erro</small>
+@using Blazored.TextEditor
+
+<div class="d-flex w-100 flex-row align-content-between mb-4">
+    <div class="w-75 d-flex align-items-center gap-3">
+        <h1 class="mb-0">Novo Artigo</h1>
+        <div class="text-danger">@erro</div>
     </div>
     <div class="d-flex justify-content-end align-items-center w-25">
-        <button class="btn btn-primary rounded-pill" @onclick='CreateNewPost'>
-            <i class="bi bi-plus-circle"></i>
-            <span>Salvar Artigo</span>
+        <button class="btn btn-primary rounded-pill" @onclick="ValidateAndCreate" disabled="@isSubmitting">
+            <i class="bi bi-save me-2"></i>
+            <span>@(isSubmitting ? "Salvando..." : "Salvar Artigo")</span>
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden="@(!isSubmitting)"></span>
         </button>
     </div>
 </div>
 
-<div class="mb-3">
-    <label for="titulo" class="form-label">Titulo</label>
-    <input @oninput='() => { erro = ""; }' @bind="NewPost.Title" type="text" class="form-control" id="titulo" placeholder="Titulo do artigo">
-</div>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="mb-3">
+            <label for="titulo" class="form-label fw-bold">Título do Artigo</label>
+            <input @oninput='() => ClearError(nameof(NewPost.Title))' 
+                   @bind="NewPost.Title" 
+                   type="text" 
+                   class="form-control @(GetInputClass(nameof(NewPost.Title)))" 
+                   id="titulo" 
+                   placeholder="Digite um título atrativo para seu artigo"/>
+            <div class="invalid-feedback">@GetErrorMessage(nameof(NewPost.Title))</div>
+        </div>
 
-<div class="mb-3">
-    <label for="formFile" class="form-label">Imagem de capa</label>
-    <InputFile class="form-control" type="file" id="formFile" OnChange="OnInputFileChange"/>
-</div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Imagem de Capa</label>
+            <div class="border rounded p-3 text-center @(GetInputClass("Image"))" 
+                 style="cursor: pointer;" 
+                 onclick="document.getElementById('formFile').click()">
+                @if (string.IsNullOrEmpty(NewPost.Image))
+                {
+                    <div>
+                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        <p class="mt-2">Clique para selecionar uma imagem</p>
+                        <small class="text-muted">Recomendado: 1200x630 pixels</small>
+                    </div>
+                }
+                else
+                {
+                    <img src="data:image/png;base64,@NewPost.Image" class="img-fluid" style="max-height: 200px;"/>
+                }
+                <InputFile id="formFile" class="d-none" OnChange="OnInputFileChange"/>
+            </div>
+            <div class="invalid-feedback">@GetErrorMessage("Image")</div>
+        </div>
 
-<div class="mb-3">
-    <label for="atividades" class="form-label">Categorias</label>
-    <div class="d-flex">
-        <select @bind="CurrentCategoryId" id="atividades" class="form-select">
-            <option selected>Selecione uma categoria</option>
-            @foreach (var act in Categories)
-            {
-                <option value="@act.Id">@act.Title</option>
-            }
-        </select>
-        <button class="btn btn-primary" @onclick="AddCategory">
-            <i class="bi bi-plus-circle-fill"></i>
-        </button>
-    </div>
-    <ul class="list-group list-unstyled list-group-horizontal gap-2 pt-2">
-        @foreach (var act in NewPost.CategoryIds)
-        {
-            <li>
-                <span class="badge bg-primary rounded-pill px-2">
-                    <span>@CategoryName(act)</span>
-                    <span class="text-white" @onclick="RemoveCategory">
-                        <i class="bi bi-x"></i>
-                    </span>
-                </span>
-            </li>
-        }
-    </ul>
-</div>
-
-@if (IsQuillLoaded)
-{
-    <BlazoredTextEditor @ref="@TextEditor" EditorCssClass="contentEditor">
-        <ToolbarContent>
-            <select class="ql-header">
-                <option selected=""></option>
-                <option value="1"></option>
-                <option value="2"></option>
-                <option value="3"></option>
-                <option value="4"></option>
-                <option value="5"></option>
-            </select>
-            <span class="ql-formats">
-                <button class="ql-bold"></button>
-                <button class="ql-italic"></button>
-                <button class="ql-underline"></button>
-                <button class="ql-strike"></button>
-            </span>
-            <span class="ql-formats">
-                <select class="ql-color"></select>
-                <select class="ql-background"></select>
-            </span>
-            <span class="ql-formats">
-                <button class="ql-list" value="ordered"></button>
-                <button class="ql-list" value="bullet"></button>
-            </span>
-            <span class="ql-formats">
-                <button class="ql-link"></button>
-                <button class="ql-image"></button>
-            </span>
-        </ToolbarContent>
-        <EditorContent>
-            <h4>Texto de teste</h4>
-        </EditorContent>
-    </BlazoredTextEditor>
-}
-else
-{
-    <div class="text-center">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando editor...</span>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Categorias</label>
+            <div class="d-flex gap-2">
+                <select @bind="CurrentCategoryId" 
+                        class="form-select @(GetInputClass("Categories"))">
+                    <option value="">Selecione uma categoria</option>
+                    @foreach (var cat in Categories)
+                    {
+                        <option value="@cat.Id">@cat.Title</option>
+                    }
+                </select>
+                <button class="btn btn-primary" @onclick="AddCategory">
+                    <i class="bi bi-plus-lg"></i> Adicionar
+                </button>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                @foreach (var catId in NewPost.CategoryIds)
+                {
+                    <div class="badge bg-primary rounded-pill px-3 py-2 d-flex align-items-center">
+                        <span>@CategoryName(catId)</span>
+                        <button class="btn btn-sm p-0 ms-2 text-white" @onclick="() => RemoveCategory(catId)">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                }
+            </div>
+            <div class="invalid-feedback">@GetErrorMessage("Categories")</div>
         </div>
     </div>
-}
+</div>
 
+<div class="card">
+    <div class="card-body">
+        @if (IsQuillLoaded)
+        {
+            <BlazoredTextEditor @ref="@TextEditor" 
+                                EditorCssClass="contentEditor"
+                                Placeholder="Escreva seu artigo aqui...">
+                <ToolbarContent>
+                    <select class="ql-header">
+                        <option selected=""></option>
+                        <option value="1">Título 1</option>
+                        <option value="2">Título 2</option>
+                        <option value="3">Título 3</option>
+                    </select>
+                    <span class="ql-formats">
+                        <button class="ql-bold" title="Negrito"></button>
+                        <button class="ql-italic" title="Itálico"></button>
+                        <button class="ql-underline" title="Sublinhado"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-list" value="ordered" title="Lista numerada"></button>
+                        <button class="ql-list" value="bullet" title="Lista com marcadores"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-link" title="Link"></button>
+                        <button class="ql-image" title="Imagem"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-clean" title="Limpar formatação"></button>
+                    </span>
+                </ToolbarContent>
+            </BlazoredTextEditor>
+            <small class="text-muted d-block mt-2">Mínimo 300 caracteres</small>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando editor...</span>
+                </div>
+                <p class="mt-3">Carregando editor de texto...</p>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private bool IsQuillLoaded = false;
+    private bool isSubmitting = false;
+    private Dictionary<string, string> errors = new();
     public BlazoredTextEditor TextEditor { get; set; }
     public CreatePostDto NewPost { get; set; } = new();
     public string erro { get; set; } = "";
-
-    public RenderFragment content { get; set; }
-
-    public List<ListCategoryDto> Categories { get; set; } = [];
+    public List<ListCategoryDto> Categories { get; set; } = new();
     public Guid CurrentCategoryId { get; set; }
-
-    public string CategoryName(Guid id) => Categories.FirstOrDefault(c => c.Id == id)?.Title ?? "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -120,97 +147,192 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine("Entrou");
-        if (firstRender)
+        if (firstRender && !IsQuillLoaded)
         {
-            Console.WriteLine("Aqui");
-            while (!IsQuillLoaded)
-            {
-                Console.WriteLine("Dentro");
-
-                await Task.Delay(4000);
-                var isLoaded = await JS.InvokeAsync<bool>("checkQuillLoaded");
-                if (isLoaded)
-                {
-                    IsQuillLoaded = true;
-                    StateHasChanged();
-                    return;
-                }
-                else
-                {
-                    await Task.Delay(500);
-                }
-            }
+            await CheckEditorLoaded();
         }
     }
 
-    private async void OnInputFileChange(InputFileChangeEventArgs obj)
+    private async Task CheckEditorLoaded()
     {
-        IBrowserFile file = obj.File;
-        var buffer = new byte[file.Size];
+        var maxAttempts = 10;
+        var attempts = 0;
+        
+        while (!IsQuillLoaded && attempts < maxAttempts)
+        {
+            attempts++;
+            var isLoaded = await JS.InvokeAsync<bool>("checkQuillLoaded");
+            if (isLoaded)
+            {
+                IsQuillLoaded = true;
+                StateHasChanged();
+                return;
+            }
+            await Task.Delay(500);
+        }
+        
+        if (!IsQuillLoaded)
+        {
+            erro = "Não foi possível carregar o editor. Recarregue a página.";
+            StateHasChanged();
+        }
+    }
 
-        using var stream = file.OpenReadStream();
-        await stream.ReadAsync(buffer);
+    private string GetInputClass(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
 
-        NewPost.Image = Convert.ToBase64String(buffer);
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+        }
+    }
+
+    public string CategoryName(Guid id) => Categories.FirstOrDefault(c => c.Id == id)?.Title ?? "Desconhecida";
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            var buffer = new byte[file.Size];
+            
+            using var stream = file.OpenReadStream(file.Size > 1024000 ? 1024000 : file.Size);
+            await stream.ReadAsync(buffer);
+            
+            NewPost.Image = Convert.ToBase64String(buffer);
+            ClearError("Image");
+        }
+        catch
+        {
+            errors["Image"] = "Erro ao carregar imagem. Tente novamente.";
+        }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 
     private void AddCategory()
     {
+        if (CurrentCategoryId == Guid.Empty)
+        {
+            errors["Categories"] = "Selecione uma categoria válida";
+            return;
+        }
+
         if (!NewPost.CategoryIds.Contains(CurrentCategoryId))
+        {
             NewPost.CategoryIds.Add(CurrentCategoryId);
+            ClearError("Categories");
+        }
         StateHasChanged();
     }
 
-    private void RemoveCategory()
+    private void RemoveCategory(Guid categoryId)
     {
-        if (NewPost.CategoryIds.Contains(CurrentCategoryId))
-            NewPost.CategoryIds.Remove(CurrentCategoryId);
+        NewPost.CategoryIds.Remove(categoryId);
         StateHasChanged();
     }
 
-    private async Task CreateNewPost()
+    private bool ValidateField(string fieldName)
     {
-        if (string.IsNullOrEmpty(NewPost.Title))
+        switch (fieldName)
         {
-            erro = "Por favor, insira um titulo para o artigo!";
-            StateHasChanged();
-            return;    
-        }
+            case nameof(NewPost.Title):
+                if (string.IsNullOrWhiteSpace(NewPost.Title))
+                {
+                    errors[fieldName] = "O título é obrigatório";
+                    return false;
+                }
+                if (NewPost.Title.Length < 10)
+                {
+                    errors[fieldName] = "O título deve ter pelo menos 10 caracteres";
+                    return false;
+                }
+                return true;
 
+            case "Image":
+                if (string.IsNullOrEmpty(NewPost.Image))
+                {
+                    errors[fieldName] = "A imagem de capa é obrigatória";
+                    return false;
+                }
+                return true;
 
-        if (string.IsNullOrEmpty(NewPost.Image))
-        {
-            erro = "Por favor, selecione uma imagem de capa!";
-            StateHasChanged();
-            return;    
-        }
+            case "Categories":
+                if (!NewPost.CategoryIds.Any())
+                {
+                    errors[fieldName] = "Selecione pelo menos uma categoria";
+                    return false;
+                }
+                return true;
 
-        if (!NewPost.CategoryIds.Any())
-        {
-            erro = "Por favor, selecione pelo menos uma categoria!";
-            StateHasChanged();
-            return;
+            case "Content":
+                // Content validation will be done in ValidateAndCreate
+                return true;
+
+            default:
+                return true;
         }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
         
-        var contentEditor = await JS.InvokeAsync<string>("getEditorContent", "ql-editor");
-        if (string.IsNullOrEmpty(contentEditor))
-        {
-            erro = "Por favor, escreva o artigo!!";
-            StateHasChanged();
-            return;
-        }
-
-        NewPost.Content = contentEditor;
-        var result = await posts.CreateNewPostAsync(NewPost);
-        if (!result)
-        {
-            erro = "Ocorreu um erro ao tentar salvar o post";
-            StateHasChanged();
-            return;
-        }
-
-        Navigator.NavigateTo("dashboard/posts");
+        isValid &= ValidateField(nameof(NewPost.Title));
+        isValid &= ValidateField("Image");
+        isValid &= ValidateField("Categories");
+        
+        return isValid;
     }
 
+    private async Task ValidateAndCreate()
+    {
+        if (isSubmitting) return;
+        
+        if (!ValidateForm())
+        {
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        // Additional content validation
+        var content = await JS.InvokeAsync<string>("getEditorContent", "ql-editor");
+        if (string.IsNullOrWhiteSpace(content) || content.Length < 300)
+        {
+            errors["Content"] = "O conteúdo do artigo deve ter pelo menos 300 caracteres";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            NewPost.Content = content;
+            var result = await posts.CreateNewPostAsync(NewPost);
+            
+            if (!result)
+            {
+                errors["General"] = "Erro ao salvar o artigo. Tente novamente.";
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            Navigator.NavigateTo("dashboard/posts");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
 }

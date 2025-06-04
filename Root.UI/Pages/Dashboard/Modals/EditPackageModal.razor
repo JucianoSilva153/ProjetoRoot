@@ -1,5 +1,6 @@
 @using Root.Application.DTOs.ActivityDto
 @using Root.Application.DTOs.PackageDtos
+
 <div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -10,21 +11,46 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label for="nome" class="form-label">Nome</label>
-                    <input @bind="NewPackage.Name" class="form-control" type="text" id="nome" placeholder="Nome do Pacote">
+                    <input @bind="NewPackage.Name" 
+                           @oninput='() => ClearError(nameof(NewPackage.Name))'
+                           class="form-control @(GetInputClass(nameof(NewPackage.Name)))" 
+                           type="text" 
+                           id="nome" 
+                           placeholder="Nome do Pacote"/>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(NewPackage.Name))</div>
                 </div>
+                
                 <div class="mb-3">
                     <label for="preco" class="form-label">Preço Base</label>
-                    <input @bind="NewPackage.PackageBasePrice" class="form-control" type="number" id="preco" placeholder="Preço Base do pacote">
+                    <input @bind="NewPackage.PackageBasePrice" 
+                           @oninput='() => ClearError(nameof(NewPackage.PackageBasePrice))'
+                           class="form-control @(GetInputClass(nameof(NewPackage.PackageBasePrice)))" 
+                           type="number" 
+                           id="preco" 
+                           placeholder="Preço Base do pacote"
+                           min="0.01"
+                           step="0.01"/>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(NewPackage.PackageBasePrice))</div>
                 </div>
+                
                 <div class="mb-3">
                     <label for="descricao" class="form-label">Descrição</label>
-                    <textarea @bind="NewPackage.Description" class="form-control" type="text" id="descricao" placeholder="Descricao do Pacote"></textarea>
+                    <textarea @bind="NewPackage.Description" 
+                              @oninput='() => ClearError(nameof(NewPackage.Description))'
+                              class="form-control @(GetInputClass(nameof(NewPackage.Description)))" 
+                              type="text" 
+                              id="descricao" 
+                              placeholder="Descrição do Pacote"></textarea>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(NewPackage.Description))</div>
                 </div>
+                
                 <div class="mb-3">
                     <label for="atividades" class="form-label">Atividades</label>
                     <div class="d-flex">
-                        <select @bind="CurrentActivityId" id="atividades" class="form-select">
-                            <option selected>Selecione uma actividade</option>
+                        <select @bind="CurrentActivityId" 
+                                id="atividades" 
+                                class="form-select @(GetInputClass("Activities"))">
+                            <option value="">Selecione uma atividade</option>
                             @foreach (var act in ListActivities)
                             {
                                 <option value="@act.Id">@act.Name</option>
@@ -34,7 +60,9 @@
                             <i class="bi bi-plus-circle-fill"></i>
                         </button>
                     </div>
-                    <ol class="list-group list-group-numbered">
+                    <div class="invalid-feedback">@GetErrorMessage("Activities")</div>
+                    
+                    <ol class="list-group list-group-numbered mt-2">
                         @foreach (var act in NewListActivities)
                         {
                             <li class="list-group-item d-flex align-items-center justify-content-between align-items-start">
@@ -42,34 +70,33 @@
                                     <div class="fw-bold">@act.Name</div>
                                     @act.Description
                                 </div>
-                                <button class="btn" @onclick="() => { RemoveActivity(act.Id);}">
+                                <button class="btn" @onclick="() => RemoveActivity(act.Id)">
                                     <i class="bi bi-x"></i>
                                 </button>
                             </li>
                         }
                     </ol>
                 </div>
-                <small class="text-danger">@erro</small>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" @onclick="UpdateNewPackage">Salvar</button>
+                <button type="button" class="btn btn-primary" @onclick="ValidateAndUpdate">Salvar</button>
             </div>
         </div>
     </div>
 </div>
 
-@code
-{
+@code {
     [Parameter] public ListPackageDto Package { get; set; }
     [Parameter] public Action OnPackageUpdated { get; set; }
+    
     public ListPackageDto NewPackage { get; set; } = new();
     public ListPackageDto OldPackage { get; set; } = new();
-    public string erro { get; set; } = "";
+    private Dictionary<string, string> errors = new();
 
-    public List<ListActivityDto> ListActivities { get; set; } = [];
-    public List<ListActivityDto> OldListActivities { get; set; } = [];
-    public List<ListActivityDto> NewListActivities { get; set; } = [];
+    public List<ListActivityDto> ListActivities { get; set; } = new();
+    public List<ListActivityDto> OldListActivities { get; set; } = new();
+    public List<ListActivityDto> NewListActivities { get; set; } = new();
     public Guid CurrentActivityId { get; set; }
 
     public string ModalId => $"editPackageModal_{Package.Id}";
@@ -100,11 +127,102 @@
         NewListActivities = OldListActivities.ToList();
     }
 
+    private string GetInputClass(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
+
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+        }
+    }
+
+    private bool ValidateField(string fieldName)
+    {
+        switch (fieldName)
+        {
+            case nameof(NewPackage.Name):
+                if (string.IsNullOrWhiteSpace(NewPackage.Name))
+                {
+                    errors[fieldName] = "Por favor, informe o nome do pacote";
+                    return false;
+                }
+                if (NewPackage.Name.Length < 3)
+                {
+                    errors[fieldName] = "O nome deve ter pelo menos 3 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewPackage.Description):
+                if (string.IsNullOrWhiteSpace(NewPackage.Description))
+                {
+                    errors[fieldName] = "Por favor, informe a descrição";
+                    return false;
+                }
+                if (NewPackage.Description.Length < 10)
+                {
+                    errors[fieldName] = "A descrição deve ter pelo menos 10 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewPackage.PackageBasePrice):
+                if (NewPackage.PackageBasePrice <= 0)
+                {
+                    errors[fieldName] = "O preço base deve ser maior que zero";
+                    return false;
+                }
+                return true;
+
+            case "Activities":
+                if (NewListActivities.Count == 0)
+                {
+                    errors[fieldName] = "Por favor, adicione pelo menos uma atividade";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+        
+        isValid &= ValidateField(nameof(NewPackage.Name));
+        isValid &= ValidateField(nameof(NewPackage.Description));
+        isValid &= ValidateField(nameof(NewPackage.PackageBasePrice));
+        isValid &= ValidateField("Activities");
+        
+        return isValid;
+    }
+
     public void AddActivity()
     {
+        if (CurrentActivityId == Guid.Empty)
+        {
+            errors["Activities"] = "Selecione uma atividade para adicionar";
+            StateHasChanged();
+            return;
+        }
+
         var currentAct = ListActivities.First(c => c.Id == CurrentActivityId);
         if (!NewListActivities.Contains(currentAct))
+        {
             NewListActivities.Add(currentAct);
+            ClearError("Activities");
+        }
         StateHasChanged();
     }
     
@@ -112,21 +230,26 @@
     {
         var currentAct = ListActivities.First(c => c.Id == actId);
         if (NewListActivities.Contains(currentAct))
+        {
             NewListActivities.Remove(currentAct);
+            if (NewListActivities.Count == 0)
+            {
+                errors["Activities"] = "O pacote deve ter pelo menos uma atividade";
+            }
+        }
         StateHasChanged();
     }
 
-    public async void UpdateNewPackage()
+    private async Task ValidateAndUpdate()
     {
-        if (string.IsNullOrEmpty(NewPackage.Name)
-            || string.IsNullOrEmpty(NewPackage.Description)
-            || !(NewListActivities.Count > 0))
+        if (ValidateForm())
         {
-            erro = "Por favor preencha todos campos!!";
-            StateHasChanged();
-            return;
+            await UpdateNewPackage();
         }
+    }
 
+    private async Task UpdateNewPackage()
+    {
         var updatedPackage = new UpdatePackageDto
         {
             Id = NewPackage.Id,
@@ -135,18 +258,16 @@
             Name = NewPackage.Name == OldPackage.Name ? null : NewPackage.Name,
             Type = NewPackage.Type == OldPackage.Type ? null : NewPackage.Type,
             ActivityIds = Equals(NewListActivities, OldListActivities) ? null : NewListActivities.Select(l => l.Id).ToList()
-
         };
         
         var result = await packages.UpdatePackageAsync(updatedPackage);
         if (!result)
         {
-            erro = "Ocorreu um erro ao tentar criar o pacote!!";
+            errors["General"] = "Ocorreu um erro ao tentar atualizar o pacote!";
             StateHasChanged();
             return;
         }
         
-        StateHasChanged();
         OnPackageUpdated.Invoke();
         await JS.InvokeVoidAsync("closeModal", ModalId);
     }

@@ -1,4 +1,5 @@
 @using Root.Application.DTOs.ClientDtos
+
 <div class="d-flex w-100 flex-row align-content-between mb-4">
     <div class="w-75 d-flex align-items-center gap-4">
         <div>
@@ -8,7 +9,7 @@
         </div>
     </div>
     <div class="d-flex justify-content-end align-items-center w-25">
-        <button class="btn btn-primary rounded-pill" @onclick='UpdateNewClient'>
+        <button class="btn btn-primary rounded-pill" @onclick="ValidateAndUpdate">
             <i class="bi bi-plus-circle"></i>
             <span>Guardar</span>
         </button>
@@ -17,30 +18,56 @@
 
 <div class="mb-3">
     <label for="nome" class="form-label">Nome</label>
-    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewClient.Name" id="nome" class="form-control" placeholder="Seu nome"/>
-</div>
-<div class="mb-3">
-    <label for="sobrenome" class="form-label">Sobrenome</label>
-    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewClient.Surname" id="sobrenome" class="form-control" placeholder="Seu sobrenome"/>
-</div>
-<div class="mb-3">
-    <label for="local" class="form-label">Nacionalidade</label>
-    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewClient.Nationality" id="local" class="form-control" placeholder="Sua nacionalidade"/>
-</div>
-<div class="mb-3">
-    <label for="nascimento" class="form-label">Data de Nascimento</label>
-    <input required @oninput='() => { erro = ""; }' type="date" @bind="NewClient.BirthDate" id="nascimento" class="form-control"/>
+    <input @oninput='() => ClearError(nameof(NewClient.Name))' 
+           type="text" 
+           @bind="NewClient.Name" 
+           id="nome" 
+           class="form-control @(GetInputClass(nameof(NewClient.Name)))" 
+           placeholder="Seu nome"/>
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewClient.Name))</div>
 </div>
 
+<div class="mb-3">
+    <label for="sobrenome" class="form-label">Sobrenome</label>
+    <input @oninput='() => ClearError(nameof(NewClient.Surname))' 
+           type="text" 
+           @bind="NewClient.Surname" 
+           id="sobrenome" 
+           class="form-control @(GetInputClass(nameof(NewClient.Surname)))" 
+           placeholder="Seu sobrenome"/>
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewClient.Surname))</div>
+</div>
+
+<div class="mb-3">
+    <label for="local" class="form-label">Nacionalidade</label>
+    <input @oninput='() => ClearError(nameof(NewClient.Nationality))' 
+           type="text" 
+           @bind="NewClient.Nationality" 
+           id="local" 
+           class="form-control @(GetInputClass(nameof(NewClient.Nationality)))" 
+           placeholder="Sua nacionalidade"/>
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewClient.Nationality))</div>
+</div>
+
+<div class="mb-3">
+    <label for="nascimento" class="form-label">Data de Nascimento</label>
+    <input @oninput='() => ClearError(nameof(NewClient.BirthDate))' 
+           type="date" 
+           @bind="NewClient.BirthDate" 
+           id="nascimento" 
+           class="form-control @(GetInputClass(nameof(NewClient.BirthDate)))" 
+           max="@DateTime.Now.ToString("yyyy-MM-dd")"/>
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewClient.BirthDate))</div>
+</div>
 
 @code {
     [Parameter] public Guid CurrentUserSpecificId { get; set; }
 
     public string erro { get; set; } = "";
     public string sucesso { get; set; } = "";
-
     public ListClientsDto NewClient { get; set; } = new();
     public ListClientsDto OldClient { get; set; } = new();
+    private Dictionary<string, string> errors = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,17 +85,108 @@
         };
     }
 
+    private string GetInputClass(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
+
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+            erro = "";
+        }
+    }
+
+    private bool ValidateField(string fieldName)
+    {
+        switch (fieldName)
+        {
+            case nameof(NewClient.Name):
+                if (string.IsNullOrWhiteSpace(NewClient.Name))
+                {
+                    errors[fieldName] = "Por favor, informe o nome";
+                    return false;
+                }
+                if (NewClient.Name.Length < 2)
+                {
+                    errors[fieldName] = "O nome deve ter pelo menos 2 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewClient.Surname):
+                if (string.IsNullOrWhiteSpace(NewClient.Surname))
+                {
+                    errors[fieldName] = "Por favor, informe o sobrenome";
+                    return false;
+                }
+                if (NewClient.Surname.Length < 2)
+                {
+                    errors[fieldName] = "O sobrenome deve ter pelo menos 2 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewClient.Nationality):
+                if (string.IsNullOrWhiteSpace(NewClient.Nationality))
+                {
+                    errors[fieldName] = "Por favor, informe a nacionalidade";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewClient.BirthDate):
+                if (NewClient.BirthDate == default)
+                {
+                    errors[fieldName] = "Por favor, informe a data de nascimento";
+                    return false;
+                }
+                if (NewClient.BirthDate > DateTime.Today)
+                {
+                    errors[fieldName] = "A data de nascimento não pode ser futura";
+                    return false;
+                }
+                if (DateTime.Today.Year - NewClient.BirthDate.Value.Year < 18)
+                {
+                    errors[fieldName] = "É necessário ter pelo menos 18 anos";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+        
+        isValid &= ValidateField(nameof(NewClient.Name));
+        isValid &= ValidateField(nameof(NewClient.Surname));
+        isValid &= ValidateField(nameof(NewClient.Nationality));
+        isValid &= ValidateField(nameof(NewClient.BirthDate));
+        
+        return isValid;
+    }
+
+    private async Task ValidateAndUpdate()
+    {
+        if (ValidateForm())
+        {
+            await UpdateNewClient();
+        }
+    }
+
     private async Task UpdateNewClient()
     {
-        if (string.IsNullOrEmpty(NewClient.Name)
-            || string.IsNullOrEmpty(NewClient.Surname)
-            || string.IsNullOrEmpty(NewClient.Nationality))
-        {
-            erro = "Por favor preencha todos os campos!";
-            StateHasChanged();
-            return;
-        }
-
         var clientToUpdate = new UpdateClientDto()
         {
             Id = NewClient.Id,
@@ -81,15 +199,13 @@
         var result = await clients.UpdateClientAsync(clientToUpdate);
         if (!result)
         {
-            erro = "Ocorreu um erro ao tentar atualizar dados!!";
+            errors["General"] = "Ocorreu um erro ao tentar atualizar dados!";
             StateHasChanged();
             return;
         }
 
         await OnInitializedAsync();
-        sucesso = "Dados Atualizados!!";
-        erro = "";
+        sucesso = "Dados atualizados com sucesso!";
         StateHasChanged();
     }
-
 }

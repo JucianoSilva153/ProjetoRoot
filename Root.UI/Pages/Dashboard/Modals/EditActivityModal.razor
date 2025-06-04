@@ -1,5 +1,6 @@
 @using Root.Application.DTOs.ActivityDto
 @using Root.Domain.Enums
+
 <div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -8,57 +9,86 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="nome" class="form-label">Nome</label>
-                        <input @oninput='() => { erro = ""; }' @bind="Activity.Name" type="text" class="form-control" id="nome" placeholder="Nome da atividade">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome</label>
+                    <input @oninput='() => ClearError(nameof(NewActivity.Name))' 
+                           @bind="NewActivity.Name" 
+                           type="text" 
+                           class="form-control @(GetInputClass(nameof(NewActivity.Name)))" 
+                           id="nome" 
+                           placeholder="Nome da atividade"/>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(NewActivity.Name))</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <textarea @oninput='() => ClearError(nameof(NewActivity.Description))' 
+                             @bind="NewActivity.Description" 
+                             class="form-control @(GetInputClass(nameof(NewActivity.Description)))" 
+                             id="descricao" 
+                             rows="3"></textarea>
+                    <div class="invalid-feedback">@GetErrorMessage(nameof(NewActivity.Description))</div>
+                </div>
+                
+                <div class="d-flex gap-2 w-100">
+                    <div class="mb-3 w-auto">
+                        <label for="duracao" class="form-label">Duração (em horas)</label>
+                        <input @oninput='() => ClearError(nameof(NewActivity.DurationTime))' 
+                               @bind="NewActivity.DurationTime" 
+                               class="form-control @(GetInputClass(nameof(NewActivity.DurationTime)))" 
+                               type="number" 
+                               id="duracao" 
+                               placeholder="Duração da Atividade em horas"
+                               min="1"/>
+                        <div class="invalid-feedback">@GetErrorMessage(nameof(NewActivity.DurationTime))</div>
                     </div>
-                    <div class="mb-3">
-                        <label for="descricao" class="form-label">Descricao</label>
-                        <textarea @oninput='() => { erro = ""; }' @bind="Activity.Description" class="form-control" id="descricao" rows="3"></textarea>
+                    
+                    <div class="mb-3 w-auto">
+                        <label for="preco" class="form-label">Preço</label>
+                        <input @oninput='() => ClearError(nameof(NewActivity.Price))' 
+                               @bind="NewActivity.Price" 
+                               class="form-control @(GetInputClass(nameof(NewActivity.Price)))" 
+                               type="number" 
+                               id="preco" 
+                               placeholder="Preço da Atividade"
+                               min="0.01"
+                               step="0.01"/>
+                        <div class="invalid-feedback">@GetErrorMessage(nameof(NewActivity.Price))</div>
                     </div>
-                    <div class="d-flex gap-2 w-100">
-                        <div class="mb-3 w-auto">
-                            <label for="duracao" class="form-label">Duracao (em horas)</label>
-                            <input @oninput='() => { erro = ""; }' @bind="Activity.DurationTime" class="form-control" type="number" id="duracao" placeholder="Duracao da Atividade em horas">
-                        </div>
-                        <div class="mb-3 w-auto">
-                            <label for="preco" class="form-label">Preco</label>
-                            <input @oninput='() => { erro = ""; }' @bind="Activity.Price" class="form-control" type="number" id="preco" placeholder="Preco da Actividade">
-                        </div>
-                        <div class="mb-3 w-auto">
-                            <label @bind="Activity.Type" for="tipo" class="form-label">Tipo de atividade</label>
-                            <select @oninput='() => { erro = ""; }' class="form-select" id="tipo" aria-label="Tipo de Atividade">
-                                <option value="@ActivityType.None" selected="">Tipo de Atividade</option>
-                                <option value="@ActivityType.Adventure">@ActivityType.Adventure.ToFriendlyString()</option>
-                                <option value="@ActivityType.Cultural">@ActivityType.Cultural.ToFriendlyString()</option>
-                                <option value="@ActivityType.Nature">@ActivityType.Nature.ToFriendlyString()</option>
-                                <option value="@ActivityType.Recreational">@ActivityType.Recreational.ToFriendlyString()</option>
-                            </select>
-                        </div>
+                    
+                    <div class="mb-3 w-auto">
+                        <label for="tipo" class="form-label">Tipo de atividade</label>
+                        <select @oninput='() => ClearError(nameof(NewActivity.Type))' 
+                                @bind="NewActivity.Type" 
+                                class="form-select @(GetInputClass(nameof(NewActivity.Type)))" 
+                                id="tipo" 
+                                aria-label="Tipo de Atividade">
+                            <option value="@ActivityType.None">Tipo de Atividade</option>
+                            <option value="@ActivityType.Adventure">@ActivityType.Adventure.ToFriendlyString()</option>
+                            <option value="@ActivityType.Cultural">@ActivityType.Cultural.ToFriendlyString()</option>
+                            <option value="@ActivityType.Nature">@ActivityType.Nature.ToFriendlyString()</option>
+                            <option value="@ActivityType.Recreational">@ActivityType.Recreational.ToFriendlyString()</option>
+                        </select>
+                        <div class="invalid-feedback">@GetErrorMessage(nameof(NewActivity.Type))</div>
                     </div>
-                    <small class="text-danger">@erro</small>
-                </form>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" @onclick="EditActivity">Salvar</button>
+                <button type="button" class="btn btn-primary" @onclick="ValidateAndEdit">Salvar</button>
             </div>
         </div>
     </div>
 </div>
 
-@code
-{
+@code {
     [Parameter] public ListActivityDto Activity { get; set; }
     [Parameter] public Action OnActivityCreated { get; set; }
 
     public ListActivityDto NewActivity { get; set; } = new();
     public ListActivityDto OldActivity { get; set; } = new();
-
-    public string erro { get; set; } = "";
+    private Dictionary<string, string> errors = new();
     public string ModalId => $"editActivityModal_{Activity.Id}";
-
 
     protected override void OnInitialized()
     {
@@ -74,18 +104,106 @@
         };
     }
 
-    public async void EditActivity()
+    private string GetInputClass(string fieldName)
     {
-        if (string.IsNullOrEmpty(NewActivity.Name)
-            || string.IsNullOrEmpty(NewActivity.Description)
-            || !(NewActivity.Price > 0)
-            || NewActivity.Type == ActivityType.None)
-        {
-            erro = "Por favor, preencha todos os campos!!";
-            StateHasChanged();
-            return;
-        }
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
 
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+        }
+    }
+
+    private bool ValidateField(string fieldName)
+    {
+        switch (fieldName)
+        {
+            case nameof(NewActivity.Name):
+                if (string.IsNullOrWhiteSpace(NewActivity.Name))
+                {
+                    errors[fieldName] = "Por favor, informe o nome da atividade";
+                    return false;
+                }
+                if (NewActivity.Name.Length < 3)
+                {
+                    errors[fieldName] = "O nome deve ter pelo menos 3 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewActivity.Description):
+                if (string.IsNullOrWhiteSpace(NewActivity.Description))
+                {
+                    errors[fieldName] = "Por favor, informe a descrição";
+                    return false;
+                }
+                if (NewActivity.Description.Length < 10)
+                {
+                    errors[fieldName] = "A descrição deve ter pelo menos 10 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewActivity.DurationTime):
+                if (NewActivity.DurationTime <= 0)
+                {
+                    errors[fieldName] = "A duração deve ser maior que zero";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewActivity.Price):
+                if (NewActivity.Price <= 0)
+                {
+                    errors[fieldName] = "O preço deve ser maior que zero";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewActivity.Type):
+                if (NewActivity.Type == ActivityType.None)
+                {
+                    errors[fieldName] = "Por favor, selecione um tipo de atividade";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+        
+        isValid &= ValidateField(nameof(NewActivity.Name));
+        isValid &= ValidateField(nameof(NewActivity.Description));
+        isValid &= ValidateField(nameof(NewActivity.DurationTime));
+        isValid &= ValidateField(nameof(NewActivity.Price));
+        isValid &= ValidateField(nameof(NewActivity.Type));
+        
+        return isValid;
+    }
+
+    private async Task ValidateAndEdit()
+    {
+        if (ValidateForm())
+        {
+            await EditActivity();
+        }
+    }
+
+    private async Task EditActivity()
+    {
         var activityToUpdate = new UpdateActivityDto
         {
             DurationTime = NewActivity.DurationTime == OldActivity.DurationTime ? null : NewActivity.DurationTime,
@@ -99,14 +217,12 @@
         var result = await activities.UpdateActivityAsync(activityToUpdate);
         if (!result)
         {
-            erro = "Ocorreu um erro ao tentar criar uma nova atividade!!";
+            errors["General"] = "Ocorreu um erro ao tentar atualizar a atividade!";
             StateHasChanged();
             return;
         }
 
-        StateHasChanged();
         OnActivityCreated.Invoke();
         await JS.InvokeVoidAsync("closeModal", ModalId);
     }
-
 }

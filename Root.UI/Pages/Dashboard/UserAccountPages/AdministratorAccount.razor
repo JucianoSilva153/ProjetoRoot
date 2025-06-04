@@ -1,4 +1,5 @@
 @using Root.Application.DTOs.AdminDtos
+
 <div class="d-flex w-100 flex-row align-content-between mb-4">
     <div class="w-75 d-flex align-items-center gap-4">
         <div>
@@ -8,7 +9,7 @@
         </div>
     </div>
     <div class="d-flex justify-content-end align-items-center w-25">
-        <button class="btn btn-primary rounded-pill" @onclick='UpdateNewAdmin'>
+        <button class="btn btn-primary rounded-pill" @onclick="ValidateAndUpdate">
             <i class="bi bi-plus-circle"></i>
             <span>Guardar</span>
         </button>
@@ -17,22 +18,34 @@
 
 <div class="mb-3">
     <label for="nome" class="form-label">Nome</label>
-    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewAdmin.Name" id="nome" class="form-control" placeholder="Seu nome"/>
+    <input @oninput='() => ClearError(nameof(NewAdmin.Name))' 
+           type="text" 
+           @bind="NewAdmin.Name" 
+           id="nome" 
+           class="form-control @(GetInputClass(nameof(NewAdmin.Name)))" 
+           placeholder="Seu nome"/>
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewAdmin.Name))</div>
 </div>
+
 <div class="mb-3">
     <label for="sobrenome" class="form-label">Sobrenome</label>
-    <input required @oninput='() => { erro = ""; }' type="text" @bind="NewAdmin.Surname" id="sobrenome" class="form-control" placeholder="Seu sobrenome"/>
+    <input @oninput='() => ClearError(nameof(NewAdmin.Surname))' 
+           type="text" 
+           @bind="NewAdmin.Surname" 
+           id="sobrenome" 
+           class="form-control @(GetInputClass(nameof(NewAdmin.Surname)))" 
+           placeholder="Seu sobrenome"/>
+    <div class="invalid-feedback">@GetErrorMessage(nameof(NewAdmin.Surname))</div>
 </div>
 
-
 @code {
-    
     [Parameter] public Guid CurrentUserSpecificId { get; set; }
     
     public string erro { get; set; } = "";
     public string sucesso { get; set; } = "";
     public ListAdminDto NewAdmin { get; set; } = new();
     public ListAdminDto OldAdmin { get; set; } = new();
+    private Dictionary<string, string> errors = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,22 +57,86 @@
             Name = NewAdmin.Name,
             Role = NewAdmin.Role,
             Surname = NewAdmin.Surname,
-            AcessLeves = NewAdmin.AcessLeves.ToList() ?? [],
+            AcessLeves = NewAdmin.AcessLeves?.ToList() ?? new(),
             UserId = NewAdmin.UserId,
             UserName = NewAdmin.UserName
         };
     }
-    
+
+    private string GetInputClass(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
+
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+            erro = "";
+        }
+    }
+
+    private bool ValidateField(string fieldName, string value)
+    {
+        switch (fieldName)
+        {
+            case nameof(NewAdmin.Name):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "Por favor, informe o nome";
+                    return false;
+                }
+                if (value.Length < 2)
+                {
+                    errors[fieldName] = "O nome deve ter pelo menos 2 caracteres";
+                    return false;
+                }
+                return true;
+
+            case nameof(NewAdmin.Surname):
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "Por favor, informe o sobrenome";
+                    return false;
+                }
+                if (value.Length < 2)
+                {
+                    errors[fieldName] = "O sobrenome deve ter pelo menos 2 caracteres";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+        
+        isValid &= ValidateField(nameof(NewAdmin.Name), NewAdmin.Name);
+        isValid &= ValidateField(nameof(NewAdmin.Surname), NewAdmin.Surname);
+        
+        return isValid;
+    }
+
+    private async Task ValidateAndUpdate()
+    {
+        if (ValidateForm())
+        {
+            await UpdateNewAdmin();
+        }
+    }
+
     private async Task UpdateNewAdmin()
     {
-        if (string.IsNullOrEmpty(NewAdmin.Name)
-            || string.IsNullOrEmpty(NewAdmin.Surname))
-        {
-            erro = "Por favor preencha todos os campos!";
-            StateHasChanged();
-            return;
-        }
-
         var adminToUpdate = new UpdateAdminDto
         {
             Id = NewAdmin.Id,
@@ -70,15 +147,13 @@
         var result = await admins.UpdateAdminAsync(adminToUpdate);
         if (!result)
         {
-            erro = "Ocorreu um erro ao tentar atualizar dados!!";
+            errors["General"] = "Ocorreu um erro ao tentar atualizar dados!";
             StateHasChanged();
             return;
         }
 
         await OnInitializedAsync();
-        sucesso = "Dados Atualizados!!";
-        erro = "";
+        sucesso = "Dados atualizados com sucesso!";
         StateHasChanged();
     }
-
 }

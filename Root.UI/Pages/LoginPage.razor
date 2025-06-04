@@ -11,18 +11,31 @@
         <div class="col-lg-6 d-flex align-items-center justify-content-center">
             <div class="form-section w-75">
                 <h2 class="text-center mb-4">Entrar</h2>
+
                 <div class="mb-3">
                     <label for="email" class="form-label">Usuário ou Email</label>
-                    <input type="email" @oninput='() => { erro = ""; }' @bind="EmailOrUsername" id="email" class="form-control" placeholder="'Paulo Andre' ou 'pauloandre@gmail.com'"/>
+                    <input type="text"
+                           @oninput='() => ClearError("EmailOrUsername")'
+                           @bind="EmailOrUsername"
+                           id="email"
+                           class="form-control @(GetInputClass("EmailOrUsername"))"
+                           placeholder="'Paulo Andre' ou 'pauloandre@gmail.com'"/>
+                    <div class="invalid-feedback">@GetErrorMessage("EmailOrUsername")</div>
                 </div>
+
                 <div class="mb-3">
                     <label for="senha" class="form-label">Palavra-Passe</label>
-                    <input type="password" @oninput='() => { erro = ""; }' @bind="loginDto.Password" id="senha" class="form-control" placeholder="Sua Palavra-Passe"/>
+                    <input type="password"
+                           @oninput='() => ClearError("Password")'
+                           @bind="loginDto.Password"
+                           id="senha"
+                           class="form-control @(GetInputClass("Password"))"
+                           placeholder="Sua Palavra-Passe"/>
+                    <div class="invalid-feedback">@GetErrorMessage("Password")</div>
                 </div>
-                <button type="submit" @onclick="Login" class="btn btn-primary w-100">Entrar</button>
-                <small>
-                    <span class="text-danger">@erro</span>
-                </small>
+                <div class="text-danger">@GetErrorMessage("Login")</div>
+                <button type="button" @onclick="ValidateAndLogin" class="btn btn-primary w-100">Entrar</button>
+
                 <div class="text-center mt-3">
                     <small>Não tem conta? <a href="signin">Cadastre-se</a></small>
                 </div>
@@ -32,10 +45,9 @@
 </div>
 
 @code {
-
     public LoginUserDto loginDto { get; set; } = new();
     public string EmailOrUsername = "";
-    string erro { get; set; } = "";
+    private Dictionary<string, string> errors = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -47,15 +59,82 @@
         }
     }
 
-    public async void Login()
+    private void ClearError(string fieldName)
     {
-        if (string.IsNullOrEmpty(EmailOrUsername) || string.IsNullOrEmpty(loginDto.Password))
+        if (errors.ContainsKey(fieldName))
         {
-            erro = "Por favor preencha todos os campos!";
-            StateHasChanged();
-            return;
+            errors.Remove(fieldName);
         }
+        
+        if (errors.ContainsKey("Login"))
+        {
+            errors.Remove("Login");
+        }
+    }
 
+    private string GetInputClass(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
+
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private bool ValidateField(string fieldName, string value)
+    {
+        switch (fieldName)
+        {
+            case "EmailOrUsername":
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "Por favor, informe seu usuário ou email";
+                    return false;
+                }
+
+                return true;
+
+            case "Password":
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    errors[fieldName] = "Por favor, informe sua palavra-passe";
+                    return false;
+                }
+
+                if (value.Length < 6)
+                {
+                    errors[fieldName] = "A palavra-passe deve ter pelo menos 6 caracteres";
+                    return false;
+                }
+
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+
+        isValid &= ValidateField("EmailOrUsername", EmailOrUsername);
+        isValid &= ValidateField("Password", loginDto.Password);
+
+        return isValid;
+    }
+
+    private async Task ValidateAndLogin()
+    {
+        if (ValidateForm())
+        {
+            await Login();
+        }
+    }
+
+    public async Task Login()
+    {
         var regex = new Regex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
         var isEmail = regex.IsMatch(EmailOrUsername);
 
@@ -65,19 +144,16 @@
             loginDto.UserName = EmailOrUsername;
 
         var result = await users.LoginAsync(loginDto);
+
         if (result is null)
         {
-            erro = "Tentativa de Login falhou! Usuario nao encontrado ou credenciais erradas!";
+            errors["Login"] = "Tentativa de login falhou! Usuário não encontrado ou credenciais incorretas!";
             StateHasChanged();
             return;
         }
 
-        erro = $"Login efetuado com Sucesso!!Id do Usuario = {result.User.Id}";
-        StateHasChanged();
-
         await LocalStorage.SetItemAsync("currentUser", JsonSerializer.Serialize(result));
         Navigator.NavigateTo("/dashboard");
     }
-    
 
 }

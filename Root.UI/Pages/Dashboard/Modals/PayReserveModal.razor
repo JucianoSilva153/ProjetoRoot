@@ -1,35 +1,121 @@
 @using Root.Application.DTOs.PaymentDtos
 @using Root.Application.DTOs.ReserveDtos
 @using Root.Domain.Enums
+
 <div class="modal fade" id="@ModalId" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Pagamento - @Reserve.PackageName</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-credit-card me-2"></i>
+                    Pagamento - @Reserve.PackageName
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-start">
-                <div>
-                    <h5 class="text-center">Está prestes a fazer o pagamento com valor total de <span class="text-primary">'@Reserve.TotalPrice.ToString("C")'</span>!</h5>
-                    <h6 class="text-center">Por favor, selecione abaixo o metodo de pagamento!</h6>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <h4 class="text-primary mb-3">
+                        <i class="bi bi-cash-stack me-2"></i>
+                        Total a Pagar: @Reserve.TotalPrice.ToString("C")
+                    </h4>
+                    <p class="text-muted">Selecione o método de pagamento abaixo</p>
                 </div>
-                <div class="my-4 gap-2">
-                    <select @bind="NewPayment.PaymentMethod" class="form-control">
-                        <option value="@PaymentMethod.Express">@PaymentMethod.Express.ToFriendlyString()</option>
-                        <option value="@PaymentMethod.Reference">@PaymentMethod.Reference.ToFriendlyString()</option>
-                        <option value="@PaymentMethod.PayPay">@PaymentMethod.PayPay.ToFriendlyString()</option>
-                        <option value="@PaymentMethod.Transference">@PaymentMethod.Transference.ToFriendlyString()</option>
-                    </select>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Método de Pagamento</label>
+                    <div class="list-group">
+                        <button @onclick="() => SelectPaymentMethod(PaymentMethod.Express)" 
+                                class="list-group-item list-group-item-action @(GetPaymentMethodClass(PaymentMethod.Express))">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+                                    @PaymentMethod.Express.ToFriendlyString()
+                                </div>
+                                @if (NewPayment.PaymentMethod == PaymentMethod.Express)
+                                {
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                }
+                            </div>
+                        </button>
+
+                        <button @onclick="() => SelectPaymentMethod(PaymentMethod.Reference)" 
+                                class="list-group-item list-group-item-action @(GetPaymentMethodClass(PaymentMethod.Reference))">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-upc-scan text-primary me-2"></i>
+                                    @PaymentMethod.Reference.ToFriendlyString()
+                                </div>
+                                @if (NewPayment.PaymentMethod == PaymentMethod.Reference)
+                                {
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                }
+                            </div>
+                        </button>
+
+                        <button @onclick="() => SelectPaymentMethod(PaymentMethod.PayPay)" 
+                                class="list-group-item list-group-item-action @(GetPaymentMethodClass(PaymentMethod.PayPay))">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-wallet2 text-info me-2"></i>
+                                    @PaymentMethod.PayPay.ToFriendlyString()
+                                </div>
+                                @if (NewPayment.PaymentMethod == PaymentMethod.PayPay)
+                                {
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                }
+                            </div>
+                        </button>
+
+                        <button @onclick="() => SelectPaymentMethod(PaymentMethod.Transference)" 
+                                class="list-group-item list-group-item-action @(GetPaymentMethodClass(PaymentMethod.Transference))">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-bank text-success me-2"></i>
+                                    @PaymentMethod.Transference.ToFriendlyString()
+                                </div>
+                                @if (NewPayment.PaymentMethod == PaymentMethod.Transference)
+                                {
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                }
+                            </div>
+                        </button>
+                    </div>
                 </div>
-                <small class="text-danger">@erro</small>
+
+                @if (ShowPaymentDetails())
+                {
+                    <div class="border p-3 rounded mb-3 bg-light">
+                        <h6 class="fw-bold mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Instruções para pagamento
+                        </h6>
+                        @GetPaymentInstructions()
+                    </div>
+                }
+
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Após confirmação, você receberá um comprovativo por email.
+                </div>
+
+                <div class="text-center text-danger mt-3">
+                    @erro
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" @onclick="PayReserve">Efetuar Pagamento</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success" @onclick="ProcessPayment" disabled="@isProcessing">
+                    <i class="bi bi-credit-card me-2"></i>
+                    @(isProcessing ? "Processando..." : "Confirmar Pagamento")
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden="@(!isProcessing)"></span>
+                </button>
             </div>
         </div>
     </div>
 </div>
+
 @code {
     [Parameter] public ListReserveDto Reserve { get; set; } = new();
     [Parameter] public Action OnPaymentDone { get; set; }
@@ -37,23 +123,81 @@
 
     public CreatePaymentDto NewPayment { get; set; } = new();
     public string erro { get; set; } = "";
+    private bool isProcessing = false;
 
-
-    private async void PayReserve()
+    protected override void OnInitialized()
     {
-        NewPayment.ReserveId = Reserve.Id;
-        NewPayment.PaymentValue = Reserve.TotalPrice;
-        
-        var result = await payments.CreateNewPaymentAsync(NewPayment);
-        if (!result)
-        {
-            erro = "Ocorreu um erro fazer o pagamento! Por favor tente mais tarde ou entre contacto com o apoio ao cliente!!";
-            StateHasChanged();
-            return;
-        }
-
-        OnPaymentDone.Invoke();
-        await JS.InvokeVoidAsync("closeModal", ModalId);
+        // Set default payment method
+        NewPayment.PaymentMethod = PaymentMethod.Express;
     }
 
+    private string GetPaymentMethodClass(PaymentMethod method)
+    {
+        return NewPayment.PaymentMethod == method ? "active" : "";
+    }
+
+    private void SelectPaymentMethod(PaymentMethod method)
+    {
+        NewPayment.PaymentMethod = method;
+        StateHasChanged();
+    }
+
+    private bool ShowPaymentDetails()
+    {
+        return NewPayment.PaymentMethod != PaymentMethod.Express;
+    }
+
+    private MarkupString GetPaymentInstructions()
+    {
+        return NewPayment.PaymentMethod switch
+        {
+            PaymentMethod.Reference => new MarkupString(
+                "Pague em qualquer Multicaixa usando a referência:<br>" +
+                "<strong class='text-primary'>123 456 789</strong><br>" +
+                "Validade: 3 dias úteis"),
+
+            PaymentMethod.PayPay => new MarkupString(
+                "Aceda à sua app PayPay e pague com o QR Code:<br>" +
+                "<div class='text-center my-2'><i class='bi bi-qr-code' style='font-size: 4rem;'></i></div>" +
+                "Ou use o número: <strong class='text-primary'>912 345 678</strong>"),
+
+            PaymentMethod.Transference => new MarkupString(
+                "Faça transferência para:<br>" +
+                "<strong>IBAN: AO06 0040 0000 1192 2313 1013 1</strong><br>" +
+                "Envie o comprovativo para pagamentos@rotasraizes.com"),
+
+            _ => new MarkupString("")
+        };
+    }
+
+    private async Task ProcessPayment()
+    {
+        if (isProcessing) return;
+        
+        isProcessing = true;
+        erro = "";
+        
+        try
+        {
+            NewPayment.ReserveId = Reserve.Id;
+            NewPayment.PaymentValue = Reserve.TotalPrice;
+            
+            var result = await payments.CreateNewPaymentAsync(NewPayment);
+            
+            if (!result)
+            {
+                erro = "Erro ao processar pagamento. Por favor tente novamente.";
+                return;
+            }
+
+            await InvokeAsync(() => {
+                OnPaymentDone.Invoke();
+                JS.InvokeVoidAsync("closeModal", ModalId);
+            });
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
 }
