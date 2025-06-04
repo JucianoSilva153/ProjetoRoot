@@ -1,63 +1,124 @@
 @layout DashboardLayout
 @page "/dashboard"
+@using System.Text.Json
 @using Root.Application.DTOs.AdminDtos
+@using Root.Application.DTOs.ClientDtos
+@using Root.Application.DTOs.GuideDtos
 @using Root.Application.DTOs.UserDtos
 @using Root.Domain.Enums
 @* Dashboard.razor *@
 <div class="container mt-4">
-    <h1 class="mb-4">Olá, <span class="text-primary">@AdminFullName</span></h1>
+    <h1 class="mb-4">Olá, <span class="text-primary">@CurrentUserFullName</span></h1>
     <div class="row g-4">
         @* Cards principais *@
-        <div class="col-md-3">
-            <div class="card text-white bg-primary h-100 rounded rounded-3">
-                <div class="card-body">
-                    <h5 class="card-title">Pacotes</h5>
-                    <p class="card-text display-6">@CountPackages</p>
-                </div>
-                <div class="card-footer">
-                    <small><i class="bi bi-box"></i> Total cadastrados</small>
-                </div>
-            </div>
-        </div>
 
-        <div class="col-md-3">
-            <div class="card text-white bg-primary h-100 rounded rounded-3">
-                <div class="card-body">
-                    <h5 class="card-title">Guias</h5>
-                    <p class="card-text display-6">@CountGuides</p>
-                </div>
-                <div class="card-footer">
-                    <small><i class="bi bi-receipt"></i> Cadastrados</small>
+        @if (CurrentUser.User.Type == UserType.Administrator)
+        {
+            <div class="col-md-3">
+                <div class="card text-white bg-primary h-100 rounded rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Pacotes</h5>
+                        <p class="card-text display-6">@CountPackages</p>
+                    </div>
+                    <div class="card-footer">
+                        <small><i class="bi bi-box"></i> Total cadastrados</small>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
 
-        <div class="col-md-3">
-            <div class="card text-white bg-primary h-100 rounded rounded-3">
-                <div class="card-body">
-                    <h5 class="card-title">Pedidos Pendentes</h5>
-                    <p class="card-text display-6">@CountPendingReserves</p>
-                </div>
-                <div class="card-footer">
-                    <small><i class="bi bi-hourglass-split"></i> Aguardando</small>
+        @if (CurrentUser.User.Type == UserType.Administrator)
+        {
+            <div class="col-md-3">
+                <div class="card text-white bg-primary h-100 rounded rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Guias</h5>
+                        <p class="card-text display-6">@CountGuides</p>
+                    </div>
+                    <div class="card-footer">
+                        <small><i class="bi bi-receipt"></i> Cadastrados</small>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
 
-        <div class="col-md-3">
-            <div class="card text-white bg-primary h-100 rounded rounded-3">
-                <div class="card-body">
-                    <h5 class="card-title">Clientes</h5>
-                    <p class="card-text display-6">@CountClients</p>
-                </div>
-                <div class="card-footer">
-                    <small><i class="bi bi-people"></i> Cadastrados</small>
+        @if (CurrentUser.User.Type == UserType.Client)
+        {
+            <div class="col-md-3">
+                <div class="card text-white bg-primary h-100 rounded rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Reservas <small>(Pendentes)</small></h5>
+                        <p class="card-text display-6">@CountMyReserves <small>(@CountPendingReserves)</small></p>
+                    </div>
+                    <div class="card-footer">
+                        <small><i class="bi bi-calendar3"></i> Pacotes Reservados</small>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
+        
+        @if (CurrentUser.User.Type == UserType.Client)
+        {
+            <div class="col-md-3">
+                <div class="card text-white bg-primary h-100 rounded rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Pagamentos</h5>
+                        <p class="card-text display-6">@CountPayments</p>
+                    </div>
+                    <div class="card-footer">
+                        <small><i class="bi bi-cash"></i> Pagamentos Feitos</small>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (CurrentUser.User.Type == UserType.Administrator)
+        {
+            <div class="col-md-3">
+                <div class="card text-white bg-primary h-100 rounded rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Pedidos</h5>
+                        <p class="card-text display-6">@CountReserves</p>
+                    </div>
+                    <div class="card-footer">
+                        <small><i class="bi bi-hourglass-split"></i> Aguardando</small>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (CurrentUser.User.Type == UserType.Administrator)
+        {
+            <div class="col-md-3">
+                <div class="card text-white bg-primary h-100 rounded rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Clientes</h5>
+                        <p class="card-text display-6">@CountClients</p>
+                    </div>
+                    <div class="card-footer">
+                        <small><i class="bi bi-people"></i> Cadastrados</small>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        @if (CurrentUser.User.Type == UserType.Guide)
+        {
+            <div class="col-md-3">
+                <div class="card text-white bg-primary h-100 rounded rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Trabalhos <small>(Feitos)</small></h5>
+                        <p class="card-text display-6">@CountGuideReserve <small>(@CountGuideDoneReserve)</small></p>
+                    </div>
+                    <div class="card-footer">
+                        <small><i class="bi bi-calendar3"></i> Reservas atribuidas</small>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 
-    @* Widgets adicionais *@
+    @* Widgets adicionais 
     <div class="row mt-5 g-4">
         <div class="col-md-6">
             <div class="card">
@@ -83,33 +144,85 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>*@
 </div>
 
-
 @code {
-    [CascadingParameter] public LoginListUserDto CurrentUser { get; set; } = new();
+    public LoginListUserDto CurrentUser { get; set; } = new();
 
-    public ListAdminDto CurrentAdmin { get; set; } = new();
+    public ListAdminDto? CurrentAdmin { get; set; } = new();
+    public ListClientsDto? CurrentClient { get; set; } = new();
+    public ListGuidesDto? CurrentGuide { get; set; } = new();
 
-    public string AdminFullName = "";
+    public string CurrentUserFullName = "";
 
     public int CountPackages { get; set; } = 0;
     public int CountGuides { get; set; } = 0;
     public int CountPendingReserves { get; set; } = 0;
+    public int CountMyReserves { get; set; } = 0;
+    public int CountPayments { get; set; } = 0;
+    public int CountReserves { get; set; } = 0;
     public int CountClients { get; set; } = 0;
+    public int CountGuideReserve { get; set; } = 0;
+    public int CountGuideDoneReserve { get; set; } = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        CurrentAdmin = await admins.GetAdminByIdAsync(CurrentUser.UserTypeId) ?? new();
+        var currentUser = await LocalStorage.GetItemAsync("currentUser");
+        if (currentUser is null)
+        {
+            Navigator.NavigateTo("/login");
+            return;
+        }
 
-        CountPackages = (await packages.GetAllPackagesAsync()).Count;
-        CountGuides = (await guides.GetAllGuidesAsync()).Count;
-        CountPendingReserves = (await reserves.GetAllReservesAsync()).Count(p => p.ReserveStatus == ReserveStatus.Pending);
-        CountClients = (await clients.GetAllClientsAsync()).Count;
+        CurrentUser = JsonSerializer.Deserialize<LoginListUserDto>(currentUser) ?? new LoginListUserDto();
         
-        AdminFullName = string.IsNullOrEmpty(CurrentAdmin.Surname) ? CurrentUser.User.UserName : CurrentAdmin.Name + " " + CurrentAdmin.Surname;
+        if (CurrentUser.User.Type == UserType.Administrator)
+            CurrentAdmin = await admins.GetAdminByIdAsync(CurrentUser.UserTypeId);
+        if (CurrentUser.User.Type == UserType.Client)
+            CurrentClient = await clients.GetClientByIdAsync(CurrentUser.UserTypeId);
+        if (CurrentUser.User.Type == UserType.Guide)
+            CurrentGuide = await guides.GetGuideByIdAsync(CurrentUser.UserTypeId);
+
+        Console.WriteLine("Admin: " + CurrentUser.UserTypeId);
+        Console.WriteLine("Client: " + CurrentClient);
+        Console.WriteLine("Guia: " + CurrentGuide);
+        LoadStats();
+        
+        SetCurrentUserFullName();
         StateHasChanged();
     }
+
+    public async void LoadStats()
+    {
+        CountPackages = (await packages.GetAllPackagesAsync()).Count;
+        CountGuides = (await guides.GetAllGuidesAsync()).Count;
+        CountPendingReserves = (await reserves.GetAllReservesAsync())
+            .Count(p => p.ClientId == CurrentUser.UserTypeId);
+        CountMyReserves = (await reserves.GetAllReservesAsync())
+            .Count(p => p.ClientId == CurrentUser.UserTypeId);
+        CountPayments = (await payments.GetAllPaymentsAsync())
+            .Count();
+        CountPendingReserves = (await reserves.GetAllReservesAsync())
+            .Count(p => p.ReserveStatus == ReserveStatus.Pending && p.ClientId == CurrentUser.UserTypeId);
+        CountReserves = (await reserves.GetAllReservesAsync()).Count();
+        CountClients = (await clients.GetAllClientsAsync()).Count;
+        
+        CountGuideReserve = (await reserves.GetAllReservesAsync())
+            .Count;
+        CountGuideDoneReserve = (await reserves.GetAllReservesAsync())
+            .Count(p => p.ReserveStatus == ReserveStatus.Confirmed);
+        StateHasChanged();
+    }
+
+    public void SetCurrentUserFullName()
+    {
+        if (CurrentAdmin is not null)
+            CurrentUserFullName = string.IsNullOrEmpty(CurrentAdmin.Surname) ? CurrentUser.User.UserName : CurrentAdmin.Name + " " + CurrentAdmin.Surname;
+        else if (CurrentGuide is not null)
+            CurrentUserFullName = string.IsNullOrEmpty(CurrentGuide.Surname) ? CurrentUser.User.UserName : CurrentGuide.Name + " " + CurrentGuide.Surname;
+        else if (CurrentClient is not null)
+            CurrentUserFullName = string.IsNullOrEmpty(CurrentClient.Surname) ? CurrentUser.User.UserName : CurrentClient.Name + " " + CurrentClient.Surname;
+     }
 
 }

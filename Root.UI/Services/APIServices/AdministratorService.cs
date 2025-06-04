@@ -27,6 +27,7 @@ public class AdministratorService(HttpClient client, LocalStorageService localSt
     {
         try
         {
+            Console.WriteLine("ID sendo mandado: " + adminId);
             var result = await client.GetFromJsonAsync<ListAdminDto?>($"/administrators/{adminId}");
             return result;
         }

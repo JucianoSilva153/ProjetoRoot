@@ -9,7 +9,7 @@ public class CreateUserEndpoint(UserService userService) : Endpoint<CreateUserDt
     {
         Post("/users");
         Description(x => x.WithTags("Users"));
-        AuthSchemes(JwtBearerDefaults.AuthenticationScheme);
+        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CreateUserDto req, CancellationToken ct)

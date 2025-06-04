@@ -134,7 +134,8 @@
             PackageBasePrice = NewPackage.PackageBasePrice == OldPackage.PackageBasePrice ? null : NewPackage.PackageBasePrice,
             Name = NewPackage.Name == OldPackage.Name ? null : NewPackage.Name,
             Type = NewPackage.Type == OldPackage.Type ? null : NewPackage.Type,
-            ActivityIds = NewListActivities == OldListActivities ? null : NewListActivities.Select(l => l.Id) as List<Guid>
+            ActivityIds = Equals(NewListActivities, OldListActivities) ? null : NewListActivities.Select(l => l.Id).ToList()
+
         };
         
         var result = await packages.UpdatePackageAsync(updatedPackage);

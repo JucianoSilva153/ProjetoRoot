@@ -55,7 +55,7 @@
 @code
 {
     [Parameter] public Guid ClientId { get; set; }
-    public Cart CurrentUserCart { get; set; } = new();
+    public Cart? CurrentUserCart { get; set; } = new();
     public List<ListPackageDto> Items { get; set; } = [];
     private Guid? SelectedItemId { get; set; }
 

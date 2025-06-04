@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Root.Application.DTOs.ReserveDtos;
 using Root.Domain.Entities;
+using Root.Domain.Enums;
 using Root.Domain.Interfaces;
 
 namespace Root.Application.Services;
@@ -16,6 +17,19 @@ public class ReserveService(IReserveRepository reserveRepository, IHttpContextAc
         return Guid.Parse(userStringId!);
     }
     
+    public UserType GetCurrentUserType()
+    {
+        var currentUser = contextAccessor.HttpContext?.User;
+        var userStringType = currentUser?.FindFirst(ClaimTypes.Role)?.Value;
+
+        if(userStringType == UserType.Administrator.ToFriendlyString())
+            return UserType.Administrator;
+        if(userStringType == UserType.Guide.ToFriendlyString())
+            return UserType.Guide;
+        
+        return UserType.Client;
+    }
+    
     public async Task<bool> CreateReserveAsync(CreateReserveDto dto)
     {
         try
@@ -26,6 +40,7 @@ public class ReserveService(IReserveRepository reserveRepository, IHttpContextAc
                 PackageId = dto.PackageId,
                 PeopleCount = dto.PeopleCount,
                 Date = dto.ReserveDate,
+                GuideId = dto.GuideId,
                 TotalPrice = dto.TotalPrice
             };
 
@@ -45,6 +60,11 @@ public class ReserveService(IReserveRepository reserveRepository, IHttpContextAc
         {
             var reserves = await reserveRepository.GetAllAsync();
 
+            if(GetCurrentUserType() == UserType.Client)
+                reserves = reserves.Where(r => r.Client.User.Id == GetCurrentUserId()).ToList();
+            if(GetCurrentUserType() == UserType.Guide)
+                reserves = reserves.Where(r => r.Guide.User.Id == GetCurrentUserId()).ToList();
+            
             return reserves.Select(r => new ListReserveDto
             {
                 Id = r.Id,
@@ -53,6 +73,7 @@ public class ReserveService(IReserveRepository reserveRepository, IHttpContextAc
                 PeopleCount = r.PeopleCount,
                 TotalPrice = r.TotalPrice,
                 ClientName = r.Client.Name,
+                GuideName = r.Guide.Name + " " + r.Guide.Surname,
                 ReserveStatus = r.Status,
                 PackageName = r.Package.Name,
                 ReserveDate = r.Date,
@@ -102,6 +123,7 @@ public class ReserveService(IReserveRepository reserveRepository, IHttpContextAc
                 return false;
 
             reserve.PeopleCount = dto.PeopleCount ?? reserve.PeopleCount;
+            reserve.GuideId = dto.GuideId ?? reserve.GuideId; 
             reserve.Date = dto.ReserveDate ?? reserve.Date;
             reserve.Status = dto.ReserveStatus ?? reserve.Status;
 

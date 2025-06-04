@@ -54,6 +54,7 @@
             return;
         }
 
+        User.UserName = User.UserName.Trim();
         User.Type = UserType.Guide;    
         User.Password = "000000";    
         var result = await users.NewUserAsync(User);

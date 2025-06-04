@@ -7,6 +7,9 @@ public class Reserve : Entity
 {
     public Client Client { get; set; }
     public Guid ClientId { get; set; }
+    
+    public Guide Guide { get; set; }
+    public Guid GuideId { get; set; }
 
     public Package Package { get; set; }
     public Guid PackageId { get; set; }

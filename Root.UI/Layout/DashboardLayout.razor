@@ -110,6 +110,15 @@
             Console.WriteLine("Usuario nao esta Autentiado!!");
             return;
         }
+        
+        var ClientId = CurrentUser.UserTypeId;
+        Console.WriteLine("ID passado => " + CurrentUser.UserTypeId);
+
+        if (CurrentUser.User.Type == UserType.Client)
+        {
+            if (!(await carts.CartExists(ClientId)))
+                carts.RegisterCart(ClientId);
+        }
 
         Console.WriteLine("Usuario Autentiado!!");
     }

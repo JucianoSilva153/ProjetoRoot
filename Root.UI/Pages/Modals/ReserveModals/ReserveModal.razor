@@ -1,3 +1,4 @@
+@using Root.Application.DTOs.GuideDtos
 @using Root.Application.DTOs.PackageDtos
 @using Root.Application.DTOs.ReserveDtos
 @using Root.Application.DTOs.UserDtos
@@ -10,15 +11,27 @@
             </div>
             <div class="modal-body text-start">
                 <div>
-                    <h5 class="text-center">Está prestes a fazer um agendamento para o pacote <span class="text-primary">'@Package.Name'</span>, no valor de <span class="text-primary">@Package.ActivitiesPackagePrice.ToString("C")</span>!</h5>
-                    <h6 class="text-center">Por favor, insira abaixo o número de participantes do pacote de turismo, e data de marcação!</h6>
+                    <h5 class="text-center">Está prestes a fazer um agendamento para o pacote <span
+                            class="text-primary">'@Package.Name'</span>, no valor de <span
+                            class="text-primary">@Package.ActivitiesPackagePrice.ToString("C")</span>!</h5>
+                    <h6 class="text-center">Por favor, insira abaixo o número de participantes do pacote de turismo, e
+                        data de marcação!</h6>
                 </div>
                 <div class="my-4 gap-2">
-                    <input @bind="NewReserve.PeopleCount" type="number" placeholder="Numero de pessoas" class="form-control"/>
+                    <input @bind="NewReserve.PeopleCount" type="number" placeholder="Numero de pessoas"
+                           class="form-control"/>
+                    <select @bind="NewReserve.GuideId" placeholder="Selecione um Guia" class="form-control">
+                        <option>Selecione um Guia</option>
+                        @foreach (var guide in Guides)
+                        {
+                            <option value="@guide.Id">@guide.Name @guide.Surname - @guide.Description</option>
+                        }
+                    </select>
                     <input @bind="NewReserve.ReserveDate" type="date" placeholder="Data" class="form-control"/>
                 </div>
                 <div>
-                    <small>Depois de se confirmar o agendamento, será redirecionado para sua conta e poderá verificar mais detalhes sobre o pagamento!!</small>
+                    <small>Depois de se confirmar o agendamento, será redirecionado para sua conta e poderá verificar
+                        mais detalhes sobre o pagamento!!</small>
                 </div>
                 <small class="text-danger">@erro</small>
             </div>
@@ -31,20 +44,32 @@
 </div>
 
 @code {
-    [Parameter]
-    public ListPackageDto Package { get; set; } = new();
+    [Parameter] public ListPackageDto Package { get; set; } = new();
     [Parameter] public Guid? ClientId { get; set; }
 
     [CascadingParameter] public LoginListUserDto CurrentUser { get; set; } = new();
     public string ModalId => $"bookPackModal_{Package.Id}";
     public CreateReserveDto NewReserve { get; set; } = new();
+    public List<ListGuidesDto> Guides { get; set; } = new();
     public string erro { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Guides = await guides.GetAllGuidesAsync();
+    }
 
     public async void BookPackage()
     {
         if (NewReserve.PeopleCount == 0)
         {
             erro = "Por favor, insira o numero de pessoas que participarao do pacote!";
+            StateHasChanged();
+            return;
+        }
+
+        if (NewReserve.GuideId == Guid.Empty)
+        {
+            erro = "Por favor, selecione um guia turistico disponivel!!";
             StateHasChanged();
             return;
         }
@@ -64,5 +89,5 @@
         await JS.InvokeVoidAsync("closeModal", ModalId);
         Navigator.NavigateTo("dashboard/reserves");
     }
-    
+
 }
