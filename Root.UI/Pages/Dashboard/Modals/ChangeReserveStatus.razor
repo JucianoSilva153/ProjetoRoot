@@ -1,0 +1,46 @@
+@using Root.Domain.Enums
+<div class="modal fade" id="cancelReserveModal_@ReserveId" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reservas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h5>Esta prestes a mudar o estado da reserva de "<span
+                            class="text-secondary">@CurrentStatus.ToFriendlyString()</span>" para "<span
+                            class="text-secondary">@NewStatus.ToFriendlyString()</span>"</h5>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" @onclick="Cancel">Confirmar</button>
+            </div>
+            <span class="text-info">@erro</span>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public ReserveStatus CurrentStatus { get; set; }
+    [Parameter] public ReserveStatus NewStatus { get; set; }
+    [Parameter] public Guid ReserveId { get; set; } = Guid.Empty;
+    [Parameter] public Action OnStatusChanged { get; set; }
+    string erro = "";
+
+
+    private async Task Cancel()
+    {
+        var result = await reserves.CancelReserveAsync(ReserveId);
+        if (result)
+        {
+            erro = "Nao foi possivel mudar o estado de sua Reserva!!";
+            return;
+        }
+
+        OnStatusChanged.Invoke();
+    }
+
+}

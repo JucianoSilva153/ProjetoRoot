@@ -7,6 +7,8 @@
 <div class="d-flex w-100 flex-row align-content-between mb-4">
     <div class="w-75 d-flex align-items-center gap-3">
         <h1 class="mb-0">Novo Artigo</h1>
+        <div class="text-danger">@GetErrorMessage("Content")</div>
+        <div class="text-danger">@GetErrorMessage("General")</div>
         <div class="text-danger">@erro</div>
     </div>
     <div class="d-flex justify-content-end align-items-center w-25">
@@ -28,7 +30,7 @@
                    class="form-control @(GetInputClass(nameof(NewPost.Title)))" 
                    id="titulo" 
                    placeholder="Digite um título atrativo para seu artigo"/>
-            <div class="invalid-feedback">@GetErrorMessage(nameof(NewPost.Title))</div>
+            <div class="text-danger">@GetErrorMessage(nameof(NewPost.Title))</div>
         </div>
 
         <div class="mb-3">
@@ -50,7 +52,7 @@
                 }
                 <InputFile id="formFile" class="d-none" OnChange="OnInputFileChange"/>
             </div>
-            <div class="invalid-feedback">@GetErrorMessage("Image")</div>
+            <div class="text-danger">@GetErrorMessage("Image")</div>
         </div>
 
         <div class="mb-3">
@@ -79,7 +81,7 @@
                     </div>
                 }
             </div>
-            <div class="invalid-feedback">@GetErrorMessage("Categories")</div>
+            <div class="text-danger">@GetErrorMessage("Categories")</div>
         </div>
     </div>
 </div>
@@ -302,7 +304,7 @@
         
         if (!ValidateForm())
         {
-            await InvokeAsync(StateHasChanged);
+            StateHasChanged();
             return;
         }
 
@@ -311,7 +313,7 @@
         if (string.IsNullOrWhiteSpace(content) || content.Length < 300)
         {
             errors["Content"] = "O conteúdo do artigo deve ter pelo menos 300 caracteres";
-            await InvokeAsync(StateHasChanged);
+            StateHasChanged();
             return;
         }
 
@@ -324,7 +326,7 @@
             if (!result)
             {
                 errors["General"] = "Erro ao salvar o artigo. Tente novamente.";
-                await InvokeAsync(StateHasChanged);
+                StateHasChanged();
                 return;
             }
 

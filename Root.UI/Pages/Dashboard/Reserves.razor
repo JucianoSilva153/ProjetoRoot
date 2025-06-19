@@ -61,9 +61,10 @@
                     }
                     @if (reserve.ReserveStatus == ReserveStatus.Pending)
                     {
-                        <button class="btn btn-secondary rounded-pill">
+                        <button class="btn btn-secondary rounded-pill" @onclick='() => { JS.InvokeVoidAsync("openModal", $"cancelReserveModal_{reserve.Id}"); }'>
                             <i class="bi bi-x-square-fill"></i>
                         </button>
+                        <ChangeReserveStatus OnStatusChanged="async () => await OnInitializedAsync()" ReserveId="reserve.Id" CurrentStatus="reserve.ReserveStatus" NewStatus="ReserveStatus.Cancelled"></ChangeReserveStatus>
                     }
                 </td>
             }

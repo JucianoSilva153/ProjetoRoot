@@ -1,12 +1,35 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Root.Application.DTOs.PackageDtos;
 using Root.Domain.Entities;
 using Root.Domain.Entities.Packages;
+using Root.Domain.Enums;
 using Root.Domain.Interfaces;
 
 namespace Root.Application.Services;
 
-public class PackageService(IPackageRepository packageRepository, IActivityRepository activityRepository)
+public class PackageService(
+    IPackageRepository packageRepository,
+    IActivityRepository activityRepository,
+    IHttpContextAccessor contextAccessor)
 {
+    public Guid? GetCurrentUserId()
+    {
+        var currentUser = contextAccessor.HttpContext?.User;
+        var userStringId = currentUser?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        return Guid.Parse(userStringId!);
+    }
+
+    public string GetCurrentUserRole()
+    {
+        var currentUser = contextAccessor.HttpContext?.User;
+        var userrole = currentUser?.FindFirst(ClaimTypes.Role)?.Value;
+
+        return userrole ?? "";
+    }
+
+
     public async Task<bool> CreatePackageAsync(CreatePackageDto dto)
     {
         try
@@ -19,6 +42,13 @@ public class PackageService(IPackageRepository packageRepository, IActivityRepos
                 BasePrice = dto.PackageBasePrice,
                 Activities = dto.ActivityIds?.Select(id => new Activity { Id = id }).ToList() ?? new()
             };
+
+            if (package.Type == PackageType.Custom)
+            {
+                int count = (await packageRepository.GetAllAsync()).Count() + 1;
+                package.Name = $"CP#({count}) - {package.Name}";
+                package.CustomPackageClientId = GetCurrentUserId();
+            }
 
             return await packageRepository.CreateAsync(package);
         }
@@ -35,6 +65,10 @@ public class PackageService(IPackageRepository packageRepository, IActivityRepos
         try
         {
             var packages = await packageRepository.GetAllAsync();
+            foreach (var p in packages)
+            {
+                Console.WriteLine($"Package: {p.Name}, Atividades: {p.Activities?.Count ?? 0}");
+            }
             return packages.Select(p => new ListPackageDto
             {
                 Id = p.Id,
@@ -42,8 +76,9 @@ public class PackageService(IPackageRepository packageRepository, IActivityRepos
                 Description = p.Description,
                 Type = p.Type,
                 PackageBasePrice = p.BasePrice,
+                CustomPackageOwnerId = p.CustomPackageClientId ??  Guid.Empty,
                 ActivitiesPackagePrice = p.Activities.Sum(a => a.Price),
-                Duration = (int) p.Activities.Sum(a => a.DurationTime),
+                Duration = (int)p.Activities.Sum(a => a.DurationTime),
                 ActivityNames = p.Activities?.Select(a => a.Name).ToList() ?? new()
             }).ToList();
         }
@@ -70,8 +105,9 @@ public class PackageService(IPackageRepository packageRepository, IActivityRepos
                 Description = package.Description,
                 Type = package.Type,
                 PackageBasePrice = package.BasePrice,
+                CustomPackageOwnerId = package.CustomPackageClientId!.Value,   
                 ActivitiesPackagePrice = package.Activities.Sum(a => a.Price),
-                Duration = (int) package.Activities.Sum(a => a.DurationTime),
+                Duration = (int)package.Activities.Sum(a => a.DurationTime),
                 ActivityNames = package.Activities?.Select(a => a.Name).ToList() ?? new()
             };
         }
@@ -100,7 +136,7 @@ public class PackageService(IPackageRepository packageRepository, IActivityRepos
             {
                 var activities = (await activityRepository.GetAllAsync())
                     .Where(a => dto.ActivityIds.Contains(a.Id)).ToList();
-                
+
                 package.Activities = activities;
             }
 

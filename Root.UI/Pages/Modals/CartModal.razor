@@ -5,7 +5,12 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen modal-lg">
         <div class="modal-content h-100">
             <div class="modal-header">
-                <h5 class="modal-title">Meu Carrinho</h5>
+                <div class="d-flex justify-content-center align-items-center">
+                    <h5 class="modal-title">Meu Carrinho</h5>
+                    <button type="button" class="btn" @onclick="OnInitializedAsync">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body h-100">

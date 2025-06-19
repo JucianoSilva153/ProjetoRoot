@@ -9,5 +9,7 @@ public class Package : Entity
     public PackageType Type { get; set; }
     public decimal BasePrice { get; set; }
 
+    public Guid? CustomPackageClientId { get; set; } = null;
+
     public ICollection<Activity> Activities { get; set; }
 }

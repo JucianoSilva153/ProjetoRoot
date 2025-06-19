@@ -10,6 +10,7 @@ public class ListPackageDto
     public PackageType Type { get; set; }
     public decimal PackageBasePrice { get; set; }
     public decimal ActivitiesPackagePrice { get; set; }
+    public Guid CustomPackageOwnerId { get; set; }
     public int Duration { get; set; }
 
     public List<string> ActivityNames { get; set; } // ou uma lista de DTOs de Activity

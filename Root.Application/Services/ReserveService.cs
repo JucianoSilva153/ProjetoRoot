@@ -150,4 +150,18 @@ public class ReserveService(IReserveRepository reserveRepository, IHttpContextAc
 
         return false;
     }
+    
+    public async Task<bool> CancelReserveAsync(Guid id)
+    {
+        try
+        {
+            return await reserveRepository.CancelReserveAsync(id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Erro ao cancelar reserva: " + ex.Message);
+        }
+
+        return false;
+    }
 }
