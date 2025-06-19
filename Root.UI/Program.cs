@@ -13,7 +13,7 @@ CultureInfo culture = new("pt-AO");
 CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:44330/") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7210/") });
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<PackageService>();
 builder.Services.AddScoped<ActivityService>();
