@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Root.Domain.Entities;
+using Root.Domain.Enums;
 using Root.Domain.Interfaces;
 using Root.Persistence.Context;
 
@@ -66,6 +67,23 @@ public class ReserveRepository(RootDbContext dbContext) : IReserveRepository
         _dbContext.Reserves.Remove(reserve);
         int entriesCount = await _dbContext.SaveChangesAsync();
 
+        if (entriesCount > 0)
+            return true;
+        return false;
+    }
+
+    public async Task<bool> CancelReserveAsync(Guid reserveId)
+    {
+        var reserve = await GetByIdAsync(reserveId);
+        if(reserve is null)
+            return false;
+        reserve.Status = ReserveStatus.Cancelled;
+        reserve.ModifiedAt = DateTime.Now;
+        
+        _dbContext.Update(reserve);
+        await _dbContext.SaveChangesAsync();
+        
+        var entriesCount = await _dbContext.SaveChangesAsync();
         if (entriesCount > 0)
             return true;
         return false;

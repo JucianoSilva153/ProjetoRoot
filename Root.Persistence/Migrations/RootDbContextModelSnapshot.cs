@@ -96,8 +96,8 @@ namespace Root.Persistence.Migrations
                         {
                             Id = new Guid("5d5629f7-cce5-43b3-8a7f-821c9c5fd0a2"),
                             AcessLeves = "[0]",
-                            CreatedAt = new DateTime(2025, 6, 2, 12, 12, 29, 756, DateTimeKind.Local).AddTicks(1195),
-                            ModifiedAt = new DateTime(2025, 6, 2, 12, 12, 29, 756, DateTimeKind.Local).AddTicks(1196),
+                            CreatedAt = new DateTime(2025, 6, 16, 21, 35, 3, 171, DateTimeKind.Local).AddTicks(7761),
+                            ModifiedAt = new DateTime(2025, 6, 16, 21, 35, 3, 171, DateTimeKind.Local).AddTicks(7762),
                             Name = "Juciano",
                             Surname = "Silva",
                             UserId = new Guid("edd7155e-5723-4bf9-bd43-e935823a7c0f")
@@ -293,6 +293,9 @@ namespace Root.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<Guid?>("CustomPackageClientId")
+                        .HasColumnType("char(36)");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -436,9 +439,9 @@ namespace Root.Persistence.Migrations
                         {
                             Id = new Guid("edd7155e-5723-4bf9-bd43-e935823a7c0f"),
                             Contact = "923679528",
-                            CreatedAt = new DateTime(2025, 6, 2, 12, 12, 29, 756, DateTimeKind.Local).AddTicks(1082),
+                            CreatedAt = new DateTime(2025, 6, 16, 21, 35, 3, 171, DateTimeKind.Local).AddTicks(7508),
                             Email = "jucs@gmail.com",
-                            ModifiedAt = new DateTime(2025, 6, 2, 12, 12, 29, 756, DateTimeKind.Local).AddTicks(1097),
+                            ModifiedAt = new DateTime(2025, 6, 16, 21, 35, 3, 171, DateTimeKind.Local).AddTicks(7538),
                             Password = "123456",
                             Type = 0,
                             UserName = "Jucs"

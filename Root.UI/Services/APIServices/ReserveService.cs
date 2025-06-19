@@ -71,6 +71,23 @@ public class ReserveService(HttpClient client, LocalStorageService localStorageS
 
         return false;
     }
+    
+    public async Task<bool> CancelReserveAsync(Guid reserveId)
+    {
+        try
+        {
+            await SetAuthorizationHeaderAsync();
+            var result = await client.DeleteAsync($"/reserves/cancel/{reserveId}");
+            if (result.IsSuccessStatusCode)
+                return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Erro ao tentar cancelar reserva => " + e);
+        }
+
+        return false;
+    }
 
     public async Task<bool> UpdateReserveAsync(UpdateReserveDto newReserve)
     {

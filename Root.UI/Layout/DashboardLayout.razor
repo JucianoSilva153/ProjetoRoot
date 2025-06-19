@@ -26,7 +26,7 @@
                 <NavLink class="nav-link" href="dashboard/posts"><i class="bi bi-card-text me-2"></i>Postagens</NavLink>
                 <NavLink class="nav-link" href="dashboard/activities"><i class="bi bi-card-text me-2"></i>Atividades</NavLink>
                 <NavLink class="nav-link" href="dashboard/orders"><i class="bi bi-list me-2"></i>Pedidos</NavLink>
-                <NavLink class="nav-link" href="dashboard/users"><i class="bi bi-people-fill me-2"></i>Usuários</NavLink>
+                <NavLink class="nav-link" href="dashboard/users"><i class="bi bi-people-fill me-2"></i>Administração</NavLink>
                 <NavLink class="nav-link" href="dashboard/clients"><i class="bi bi-person-lines-fill me-2"></i>Clientes</NavLink>
             }
             else if (CurrentUser.User.Type == UserType.Guide)
@@ -37,6 +37,7 @@
             else if (CurrentUser.User.Type == UserType.Client)
             {
                 <NavLink class="nav-link" href="dashboard"><i class="bi bi-grid-fill me-2"></i>Dashboard</NavLink>
+                <NavLink class="nav-link" href="dashboard/packages"><i class="bi bi-table me-2"></i>Meus Pacotes</NavLink>
                 <NavLink class="nav-link" href="dashboard/reserves"><i class="bi bi-table me-2"></i>Reservas</NavLink>
                 <NavLink class="nav-link" href="dashboard/payments"><i class="bi bi-person-badge-fill me-2"></i>Pagamentos</NavLink>
             }

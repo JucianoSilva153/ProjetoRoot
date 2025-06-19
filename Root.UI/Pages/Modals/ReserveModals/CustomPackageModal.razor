@@ -1,3 +1,7 @@
+@using Root.Application.DTOs.ActivityDto
+@using Root.Application.DTOs.PackageDtos
+@using Root.Application.DTOs.UserDtos
+@using Root.Domain.Enums
 <div class="modal fade" id="customPackModal" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -6,16 +10,315 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Pacote Base</label>
+                    <div class="d-flex mb-2">
+                        <select class="form-select" @bind="CurrentBasePackageId">
+                            <option>Selecione o Pacote base</option>
+                            @foreach (var pack in ListPackage)
+                            {
+                                <option value="@pack.Id">@pack.Name</option>
+                            }
+                        </select>
+                    </div>
 
+                </div>
+
+                <div class="mb-3">
+                    <h2 class="text-center">@CurrentPackageName</h2>
+                    <h5 class="text-center text-secondary">Total: @TotalCurrentPackage.ToString("C")</h5>
+                </div>
+
+                <div class="mb-3">
+                    <p>@CurrentPackageDescription</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Atividades Incluídas</label>
+                    <div class="d-flex mb-2">
+                        <select @bind="CurrentActivityId"
+                                id="atividades"
+                                class="form-select @(GetInputClass("Activities"))">
+                            <option value="null">Selecione uma atividade</option>
+                            @foreach (var act in AvailableActivities)
+                            {
+                                <option value="@act.Id">@act.Name (@act.Price.ToString("C"))</option>
+                            }
+                        </select>
+                        <button class="btn btn-primary ms-2" @onclick="AddActivity">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Adicionar
+                        </button>
+                    </div>
+
+                    <div class="border rounded p-2 @(GetInputClass("Activities"))"
+                         style="max-height: 300px; overflow-y: auto;">
+                        @if (SelectedActivities.Any())
+                        {
+                            <ol class="list-group list-group-numbered">
+                                @foreach (var act in SelectedActivities)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                                        <div class="ms-2 me-auto">
+                                            <div class="fw-bold">@act.Name</div>
+                                            <small>@act.Description</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @onclick="() => RemoveActivity(act.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </li>
+                                }
+                            </ol>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-3">
+                                <i class="bi bi-info-circle fs-4"></i>
+                                <p class="mt-2">Nenhuma atividade selecionada</p>
+                            </div>
+                        }
+                    </div>
+                    <div class="invalid-feedback">@GetErrorMessage("Activities")</div>
+                    @if (SelectedActivities.Any())
+                    {
+                        <div class="mt-2 text-end">
+                            <span class="fw-bold">Total estimado: </span>
+                            <span class="text-success">@(CalculateTotalPrice().ToString("C"))</span>
+                        </div>
+                    }
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary">Agendar este pacote</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" @onclick="ValidateAndCreate" disabled="@(isSubmitting)">
+                    <i class="bi bi-check-circle me-1"></i>
+                    @(isSubmitting ? "Salvando..." : "Salvar Pacote")
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                          hidden="@(!isSubmitting)"></span>
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 @code {
-    
+    [Parameter] public List<ListPackageDto> ListPackage { get; set; } = new();
+    public CreatePackageDto NewPackage { get; set; } = new();
+    private Dictionary<string, string> errors = new();
+    private bool isSubmitting = false;
+
+    private Guid _currentBasePackageId;
+
+    private Guid CurrentBasePackageId
+    {
+        get => _currentBasePackageId;
+        set
+        {
+            _currentBasePackageId = value;
+            GetTotalCurrentPackage(value);
+        }
+    }
+
+    private string CurrentPackageName { get; set; }
+    private string CurrentPackageDescription { get; set; }
+    private decimal CurrentPackageBasePrice { get; set; }
+    private decimal TotalCurrentPackage { get; set; } = 0;
+
+    private void GetTotalCurrentPackage(Guid id)
+    {
+        var CurrentBasePackage = ListPackage.FirstOrDefault(c => c.Id == id);
+        if (CurrentBasePackage is null)
+            return;
+        TotalCurrentPackage = CurrentBasePackage.ActivitiesPackagePrice + CurrentBasePackage.PackageBasePrice;
+        CurrentPackageName = CurrentBasePackage.Name;
+        CurrentPackageDescription = CurrentBasePackage.Description;
+        CurrentPackageBasePrice = CurrentBasePackage.PackageBasePrice;
+
+        SelectedActivities = [];
+        foreach (var activity in AvailableActivities)
+        {
+            if (CurrentBasePackage.ActivityNames.Any(n => n == activity.Name))
+            {
+                SelectedActivities.Add(activity);
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    public List<ListActivityDto> AvailableActivities { get; set; } = new();
+    public List<ListActivityDto> SelectedActivities { get; set; } = new();
+    public Guid? CurrentActivityId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AvailableActivities = await activities.GetAllActivitiesAsync();
+        ListPackage = await packages.GetAllPackagesAsync();
+    }
+
+    private string GetInputClass(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? "is-invalid" : "";
+    }
+
+    private string GetErrorMessage(string fieldName)
+    {
+        return errors.ContainsKey(fieldName) ? errors[fieldName] : "";
+    }
+
+    private void ClearError(string fieldName)
+    {
+        if (errors.ContainsKey(fieldName))
+        {
+            errors.Remove(fieldName);
+            StateHasChanged();
+        }
+    }
+
+    private decimal CalculateTotalPrice()
+    {
+        return SelectedActivities.Sum(a => a.Price) + NewPackage.PackageBasePrice;
+    }
+
+    public void AddActivity()
+    {
+        if (CurrentActivityId == Guid.Empty)
+        {
+            errors["Activities"] = "Selecione uma atividade para adicionar";
+            StateHasChanged();
+            return;
+        }
+
+        var activity = AvailableActivities.First(a => a.Id == CurrentActivityId);
+        if (!SelectedActivities.Any(a => a.Id == activity.Id))
+        {
+            SelectedActivities.Add(activity);
+            ClearError("Activities");
+            StateHasChanged();
+        }
+    }
+
+    public void RemoveActivity(Guid activityId)
+    {
+        var activity = SelectedActivities.First(a => a.Id == activityId);
+        SelectedActivities.Remove(activity);
+        if (!SelectedActivities.Any())
+        {
+            errors["Activities"] = "Adicione pelo menos uma atividade";
+        }
+
+        StateHasChanged();
+    }
+
+    private bool ValidateField(string fieldName)
+    {
+        switch (fieldName)
+        {
+            case nameof(NewPackage.Name):
+                if (string.IsNullOrWhiteSpace(NewPackage.Name))
+                {
+                    errors[fieldName] = "O nome do pacote é obrigatório";
+                    return false;
+                }
+
+                if (NewPackage.Name.Length < 5)
+                {
+                    errors[fieldName] = "O nome deve ter pelo menos 5 caracteres";
+                    return false;
+                }
+
+                return true;
+
+            case nameof(NewPackage.Description):
+                if (string.IsNullOrWhiteSpace(NewPackage.Description))
+                {
+                    errors[fieldName] = "A descrição é obrigatória";
+                    return false;
+                }
+
+                if (NewPackage.Description.Length < 20)
+                {
+                    errors[fieldName] = "A descrição deve ter pelo menos 20 caracteres";
+                    return false;
+                }
+
+                return true;
+
+            case nameof(NewPackage.PackageBasePrice):
+                if (NewPackage.PackageBasePrice < 10)
+                {
+                    errors[fieldName] = "O preço base mínimo é €10.00";
+                    return false;
+                }
+
+                return true;
+
+            case "Activities":
+                if (!SelectedActivities.Any())
+                {
+                    errors[fieldName] = "Adicione pelo menos uma atividade";
+                    return false;
+                }
+
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        bool isValid = true;
+
+        isValid &= ValidateField(nameof(NewPackage.Name));
+        isValid &= ValidateField(nameof(NewPackage.Description));
+        isValid &= ValidateField(nameof(NewPackage.PackageBasePrice));
+        isValid &= ValidateField("Activities");
+
+        return isValid;
+    }
+
+    private async Task ValidateAndCreate()
+    {
+        if (isSubmitting) return;
+
+        NewPackage.Type = PackageType.Custom;
+        NewPackage.Name = CurrentPackageName;
+        NewPackage.Description = CurrentPackageDescription;
+        NewPackage.PackageBasePrice = CurrentPackageBasePrice;
+
+        if (!ValidateForm())
+        {
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            NewPackage.ActivityIds = SelectedActivities.Select(a => a.Id).ToList();
+
+
+            var result = await packages.CreateNewPackageAsync(NewPackage);
+            if (!result)
+            {
+                errors["General"] = "Ocorreu um erro ao criar o pacote. Por favor, tente novamente.";
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            // Reset form on success
+            NewPackage = new CreatePackageDto();
+            SelectedActivities.Clear();
+            await InvokeAsync(() => { JS.InvokeVoidAsync("closeModal", "customPackModal"); });
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
 }
