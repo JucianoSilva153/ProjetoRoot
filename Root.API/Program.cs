@@ -1,10 +1,12 @@
 using System.Text;
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Root.Application;
 using Root.Infrastructure;
 using Root.Persistence;
+using Root.Persistence.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +42,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddInfrastructure();
 builder.Services.AddApplication();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirTudo", policy =>
@@ -51,14 +54,35 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<RootDbContext>();
+    var retries = 10;
+    while (retries > 0)
+    {
+        try
+        {
+            db.Database.Migrate();
+            break;
+        }
+        catch
+        {
+            retries--;
+            Thread.Sleep(2000); // espera 2 segundos
+        }
+    }
+}
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || true) // <- esse 'true' força ativar
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 app.UseCors("PermitirTudo");
 

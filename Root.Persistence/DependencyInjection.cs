@@ -11,8 +11,19 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
+        var conn = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
+        Console.WriteLine($"CONNECTION STRING EF: {conn}");
+
         services.AddDbContext<RootDbContext>(op =>
-            op.UseMySql(configuration.GetConnectionString("Default"), ServerVersion.Parse("10.4.32")));
+            op.UseMySql(
+                conn,
+                ServerVersion.Parse("10.4.32"),
+                mySqlOptions =>
+                {
+                    mySqlOptions.EnableRetryOnFailure();
+                }
+            )
+        );
 
         // other services...
         services.AddTransient<IActivityRepository, ActivityRepository>();

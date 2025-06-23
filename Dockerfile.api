@@ -1,12 +1,12 @@
-# Etapa de build
+# Build da API
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet restore Root.API/Root.API.csproj
 RUN dotnet publish Root.API/Root.API.csproj -c Release -o /app/publish
 
-# Etapa final
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+# Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 5000
