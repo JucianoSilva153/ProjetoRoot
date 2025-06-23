@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    environment:
+      - ConnectionStrings__Default=server=mysql;port=3306;database=rootDb;user=root;password=12345678;
+
+  blazor:
+    build:
+      context: .
+      dockerfile: Dockerfile.blazor
+    ports:
+      - "5001:5001"
+    depends_on:
+      - api
+
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678
+      MYSQL_DATABASE: rootDb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

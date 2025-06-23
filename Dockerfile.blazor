@@ -1,0 +1,13 @@
+# Etapa de build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+COPY . .
+
+# ⚠️ Atenção aqui: usar caminho do .csproj relativo à raiz
+RUN dotnet publish Root.UI/Root.UI.csproj -c Release -o /app/publish
+
+# Etapa final: servir com nginx
+FROM nginx:alpine
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+EXPOSE 80
